@@ -72,7 +72,7 @@ def plot_fit(wav, spec, popt, model, redshift, coord=None, save=False, wav_type=
         fig = plot_hbeta_hgamma_fit(wav, spec, popt, fig, redshift, wav_type=wav_type)
         fig.suptitle(r"H$\gamma$ and H$\beta$ fits")
     elif model == "oii_doublet":
-        fig = plot_oii_doublet(wav, spec, popt, fig, redshift)
+        fig = plot_oii_doublet(wav, spec, popt, fig, redshift, wav_type=wav_type)
         fig.suptitle(r"[O II] doublet fit")
     elif model == "all_lines":
         fig = plot_all_lines(wav, spec, popt, fig, redshift)
@@ -200,7 +200,11 @@ def plot_oii_doublet(wav, spec, popt, fig, redshift, coord=None, save=False,
     wav_finer = np.linspace(wav[0], wav[-1], num=10000)
     line1_fit = analysis.gaussian_model(wav_finer, *line1_popt)
     line2_fit = analysis.gaussian_model(wav_finer, *line2_popt)
-    spec_fit = analysis.two_gaussian_model(wav_finer, *popt)
+    if wav_type == 'air':
+        model = two_gaussian_model_air
+    else:
+        model = two_gaussian_model_vac
+    spec_fit = analysis.model(wav_finer, *popt)
     ax1.plot(wav, spec, label="Spectrum")
     ax1.plot(wav_finer, line1_fit, label=r"[O II]$\lambda$3727 line")
     ax1.plot(wav_finer, line2_fit, label=r"[O II]$\lambda$3729 line")
