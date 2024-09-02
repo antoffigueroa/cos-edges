@@ -201,10 +201,10 @@ def plot_oii_doublet(wav, spec, popt, fig, redshift, coord=None, save=False,
     line1_fit = analysis.gaussian_model(wav_finer, *line1_popt)
     line2_fit = analysis.gaussian_model(wav_finer, *line2_popt)
     if wav_type == 'air':
-        model = two_gaussian_model_air
+        model = analysis.two_gaussian_model_air
     else:
-        model = two_gaussian_model_vac
-    spec_fit = analysis.model(wav_finer, *popt)
+        model = analysis.two_gaussian_model_vac
+    spec_fit = model(wav_finer, *popt)
     ax1.plot(wav, spec, label="Spectrum")
     ax1.plot(wav_finer, line1_fit, label=r"[O II]$\lambda$3727 line")
     ax1.plot(wav_finer, line2_fit, label=r"[O II]$\lambda$3729 line")
