@@ -156,7 +156,7 @@ def plot_hbeta_hgamma_fit(wav, spec, popt, fig, redshift, coord=None,
 
 
 def plot_oii_doublet(wav, spec, popt, fig, redshift, coord=None, save=False,
-                     file=None):
+                     file=None, wav_type='air'):
     """
     plots the Hbeta and Hgamma fits calculated by
     analysis.two_gaussian_model
