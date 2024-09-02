@@ -2380,7 +2380,7 @@ def mu_map(wav, data, var, redshift, mask_oii=None, mask_hbeta=None,
 
 
 def flux_maps(wav, data, var, redshift, mask_oii, mask_hbeta, separate=False,
-              error=False, plot=False):
+              error=False, plot=False, wav_type='air'):
     """
     Calculates [O II], Hbeta and [O III] fluxes.
 
@@ -2472,7 +2472,7 @@ def flux_maps(wav, data, var, redshift, mask_oii, mask_hbeta, separate=False,
                 if mask_hbeta[y, x]:
                     popt, pcov = four_gaussian_fitting(wav, spectrum, redshift,
                                                        var=variance, plot=plot,
-                                                       coord=(x, y))
+                                                       coord=(x, y), wav_type=wav_type)
                     if type(popt) != int:
                         perr = np.sqrt(np.diag(pcov))
                         hbeta_flux_map[y, x] = (popt[4] * popt[5] *
@@ -2489,7 +2489,7 @@ def flux_maps(wav, data, var, redshift, mask_oii, mask_hbeta, separate=False,
                 else:
                     popt, pcov = two_gaussian_fitting(wav, spectrum, redshift,
                                                       var=variance, plot=plot,
-                                                      coord=(x, y))
+                                                      coord=(x, y), wav_type=wav_type)
                 if type(popt) != int:
                     perr = np.sqrt(np.diag(pcov))
                     if separate:
