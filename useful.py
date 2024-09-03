@@ -1162,6 +1162,7 @@ def create_cube_vorbin(vorbin_path, spectrum_list, var_list, data_path,
     """
     cube, var, wav, hdr = read_cube(data_path, var_path)
     df = pd.read_csv(vorbin_path, names=['x', 'y', 'number'], sep=r"\s+")
+    df = df.sort_values(by=['number'], ignore_index=True)
     vorbin_cube = np.zeros((spectrum_list.shape[1],
                             int(df['y'].iloc[-1]) + 1,
                             int(df['x'].iloc[-1]) + 1))
