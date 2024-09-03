@@ -1131,7 +1131,7 @@ def create_spectrum_list(vorbin_path, data_path, var_path):
     return df, spectrum_list, var_list
 
 
-def create_cube_vorbin(vorbin_path, spectrum_list, var_list, data_path,
+def create_cube_vorbin(vorbin_path, spec_list, var_list, data_path,
                        var_path):
     """
     creates a voronoi binned cube.
@@ -1141,7 +1141,7 @@ def create_cube_vorbin(vorbin_path, spectrum_list, var_list, data_path,
     vorbin_path : str
         directory with the location of the vorbin output file.
 
-    spectrum_list : :obj:'~numpy.ndarray'
+    spec_list : :obj:'~numpy.ndarray'
         array with spectra, where each spectra corresponds to the bin of its
         index.
 
@@ -1163,16 +1163,16 @@ def create_cube_vorbin(vorbin_path, spectrum_list, var_list, data_path,
     cube, var, wav, hdr = read_cube(data_path, var_path)
     df = pd.read_csv(vorbin_path, names=['x', 'y', 'number'], sep=r"\s+")
     df = df.sort_values(by=['number'], ignore_index=True)
-    vorbin_cube = np.zeros((spectrum_list.shape[1],
+    vorbin_cube = np.zeros((spec_list.shape[1],
                             int(df['y'].max()) + 1,
                             int(df['x'].max()) + 1))
-    vorbin_var = np.zeros((spectrum_list.shape[1],
+    vorbin_var = np.zeros((spec_list.shape[1],
                            int(df['y'].max()) + 1,
                            int(df['x'].max()) + 1))
     for i in range(df.shape[0]):
         y_cube = int(df['y'].iloc[i])
         x_cube = int(df['x'].iloc[i])
-        vorbin_cube[:, y_cube, x_cube] = spectrum_list[int(df['number'].iloc[i])]
+        vorbin_cube[:, y_cube, x_cube] = spec_list[int(df['number'].iloc[i])]
         vorbin_var[:, y_cube, x_cube] = var_list[int(df['number'].iloc[i])]
     save_cube(vorbin_cube, hdr, var=vorbin_var, cubeid='00047',
               desc='vorbin_cont_11')
