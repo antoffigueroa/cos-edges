@@ -1171,8 +1171,8 @@ def create_cube_vorbin(vorbin_path, spectrum_list, var_list, data_path,
     for i in range(df.shape[0]):
         y_cube = int(df['y'].iloc[i])
         x_cube = int(df['x'].iloc[i])
-        vorbin_cube[:, y_cube, x_cube] = spectrum_list[int(df['number'][i])]
-        vorbin_var[:, y_cube, x_cube] = var_list[int(df['number'][i])]
+        vorbin_cube[:, y_cube, x_cube] = spectrum_list[int(df['number'].iloc[i])]
+        vorbin_var[:, y_cube, x_cube] = var_list[int(df['number'].iloc[i])]
     save_cube(vorbin_cube, hdr, var=vorbin_var, cubeid='00047',
               desc='vorbin_cont_11')
     return vorbin_cube
