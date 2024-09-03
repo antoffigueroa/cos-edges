@@ -1111,7 +1111,7 @@ def create_spectrum_list(vorbin_path, data_path, var_path):
     cube, var, wav, hdr = read_cube(data_path, var_path)
     df = pd.read_csv(vorbin_path, names=['x', 'y', 'number'], sep=r"\s+")
     df = df.sort_values(by=['number'], ignore_index=True)
-    number_of_bins = df['number'][df.shape[0] - 1] + 1
+    number_of_bins = int(df['number'][df.shape[0] - 1] + 1)
     spectrum_list = np.zeros((number_of_bins, len(wav)))
     var_list = np.zeros((number_of_bins, len(wav)))
     counter = 0
@@ -1176,6 +1176,7 @@ def create_cube_vorbin(vorbin_path, spectrum_list, var_list, data_path,
     save_cube(vorbin_cube, hdr, var=vorbin_var, cubeid='00047',
               desc='vorbin_cont_11')
     return vorbin_cube
+
 
 def calc_mag(flux, band):
     sun_abs_mag = {"r": 8, "i": 5.21}
