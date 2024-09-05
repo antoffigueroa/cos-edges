@@ -274,7 +274,7 @@ def cut_spec(wav, spec, var, delta, wobs, full=True, cont=False):
         else:
             amplitude = max(spec_cut)
         p0 = np.array([amplitude, np.mean(wav_cut), np.std(wav_cut)])
-        low_bounds = np.array([0, wobs-7., 1.0])
+        low_bounds = np.array([0, wobs-7., 0])
         up_bounds = np.array([np.inf, wobs+7., 15])
         bounds = np.array([low_bounds, up_bounds])
         return wav_cut, spec_cut, var_cut, p0, bounds
@@ -359,15 +359,15 @@ def cut_spec_n(wav, spec, var, delta, wobs_array, n, cont=False, four=False,
             else:
                 amplitude = max(spec_cut_i)
             if four:
-                p0 = np.array([amplitude, np.mean(wav_cut_i), 5, 1.0])
+                p0 = np.array([amplitude, np.mean(wav_cut_i), 1., 1.0])
                 low_bounds = np.array([0, wobs_array[i]-7, 0, 0.5])
                 up_bounds = np.array([np.inf, wobs_array[i]+7, 15, 2.0])
             elif bpt:
-                p0 = np.array([amplitude, np.mean(wav_cut_i), 5])
+                p0 = np.array([amplitude, np.mean(wav_cut_i), 1.])
                 low_bounds = np.array([0, wobs_array[i]-7, 0])
                 up_bounds = np.array([np.inf, wobs_array[i]+7, 15])
             else:
-                p0 = np.array([amplitude, np.mean(wav_cut_i), 5])
+                p0 = np.array([amplitude, np.mean(wav_cut_i), 1.])
                 low_bounds = np.array([0, wobs_array[i]-7, 0])
                 up_bounds = np.array([np.inf, wobs_array[i]+7, 15])
         else:
@@ -379,7 +379,7 @@ def cut_spec_n(wav, spec, var, delta, wobs_array, n, cont=False, four=False,
             else:
                 amplitude = max(spec_cut_i)
             if four or bpt:
-                p0 = np.append(p0, np.array([amplitude, 5]))
+                p0 = np.append(p0, np.array([amplitude, 1.]))
                 low_bounds = np.append(low_bounds, np.array([0, 0]))
                 up_bounds = np.append(up_bounds, np.array([np.inf, 15]))
             else:
