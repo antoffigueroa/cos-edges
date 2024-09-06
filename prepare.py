@@ -214,7 +214,8 @@ def calculate_ebv(hbeta_flux, hgamma_flux):
     return ebv, flux_ratio
 
 
-def ebv_cube(wav, data, var, redshift, mask=None, plot=False, wav_type='air', n=1):
+def ebv_cube(wav, data, var, redshift, mask=None, plot=False, wav_type='air',
+             n=1):
     """
     Applies calculate_ebv to a data cube.
 
@@ -261,13 +262,15 @@ def ebv_cube(wav, data, var, redshift, mask=None, plot=False, wav_type='air', n=
             variance = var[:, y, x]
             popt, pcov = analysis.hbeta_hgamma_fitting(wav, spectrum, redshift,
                                                        var=variance, plot=True,
-                                                       coord=(x, y), wav_type=wav_type, n=n)
+                                                       coord=(x, y),
+                                                       wav_type=wav_type, n=n)
             if type(popt) == int:
                 ebv[y, x] = 0.01
                 flux_ratio[y, x] = 2.15
                 continue
             else:
-                hbeta_flux, hgamma_flux = analysis.hbeta_hgamma_fluxes(popt, n=n)
+                hbeta_flux, hgamma_flux = analysis.hbeta_hgamma_fluxes(popt,
+                                                                       n=n)
                 ebv[y, x], flux_ratio[y, x] = calculate_ebv(hbeta_flux,
                                                             hgamma_flux)
     return ebv, flux_ratio
@@ -309,7 +312,8 @@ def dust_extinction_correction(wav, data, var, redshift, mask=None,
         final dust extinction corrected variance cube.
     """
     if ebv_map is None:
-        ebv, flux_ratio = ebv_cube(wav, data, var, redshift, mask=mask, wav_type=wav_type, n=n)
+        ebv, flux_ratio = ebv_cube(wav, data, var, redshift, mask=mask,
+                                   wav_type=wav_type, n=n)
     else:
         ebv = ebv_map
     # convert lamdas from Angstroms into micrometers
@@ -341,7 +345,8 @@ def dust_extinction_correction(wav, data, var, redshift, mask=None,
     return data, var
 
 
-def remove_emission_lines(wav, spec, var, redshift, wav_type='air', only_balmer=False):
+def remove_emission_lines(wav, spec, var, redshift, wav_type='air',
+                          only_balmer=False):
     """
     Removes [O II], [O III] and Balmer series emission lines from a spectrum.
 
@@ -380,14 +385,16 @@ def remove_emission_lines(wav, spec, var, redshift, wav_type='air', only_balmer=
     except RuntimeError:
         print('No valid wave_type provided')
     if only_balmer:
-        popt, pcov = analysis.hbeta_hgamma_fitting(wav, spec, redshift, var=var, wav_type=wav_type)
+        popt, pcov = analysis.hbeta_hgamma_fitting(wav, spec, redshift,
+                                                   var=var, wav_type=wav_type)
         if type(popt) == int:
             return spec
         A1, mu, sigma3, A3 = popt
         found_redshift = mu/dict_wav['Hgamma'] - 1
         emission_lines = hgamma_hbeta_model(wav, *popt)
     else:
-        popt, pcov = analysis.four_gaussian_fitting(wav, spec, redshift, var=var, wav_type=wav_type)
+        popt, pcov = analysis.four_gaussian_fitting(wav, spec, redshift,
+                                                    var=var, wav_type=wav_type)
         if type(popt) == int:
             return spec
         A1, mu, sigma1, alpha, A3, sigma3, A4, sigma4 = popt
@@ -395,7 +402,8 @@ def remove_emission_lines(wav, spec, var, redshift, wav_type='air', only_balmer=
         emission_lines = four_gaussian_model(wav, *popt)
         # Add missing lines
         # # [O III] weaker
-        oiii_params = (A4/3., dict_wav['OIII_l'] * (1 + found_redshift), sigma4)
+        oiii_params = (A4/3., dict_wav['OIII_l'] * (1 + found_redshift),
+                       sigma4)
         oiii_line = analysis.gaussian_model(wav, *oiii_params)
         emission_lines = emission_lines + oiii_line
         # # Hgamma
@@ -507,19 +515,22 @@ def bary_correction(wav, header):
     barywave = wav * (1.0 + (bcorr.value/cval))
     return barywave
 
+
 def flux_calib(wav, spec, target_mag, band='r'):
-	dict_bands = {'r': "/Users/antoniafernandezfigueroa/phd/ultrastrong/flux_calib/SDSS_r/SLOAN_SDSS.r.dat",
-	              "i": "/Users/antoniafernandezfigueroa/phd/ultrastrong/flux_calib/SDSS_i/SLOAN_SDSS.i.dat"}
-	band_transmission = pd.read_csv(dict_bands[band], sep=' ', names=['wavelength', 'transmission'])
-	max_trans = np.max(band_transmission['transmission'])
-	band_transmission['transmission'] *= 1. / max_trans
-	band_trans = band_transmission['transmission'].to_numpy()
-	band_wav = band_transmission['wavelength'].to_numpy()
-	if band_wav[0] < wav[0]:
-		# create new wavelength array that extends until band_wav[0]
-		wav_step = wav[1] - wav[0]
-		new_wav = np.arange(band_wav[0], wav[0] - wav_step, wav_step)
-		new_wav = np.append(new_wav, wav)
+    dict_bands = {'r': "/Users/antoniafernandezfigueroa/phd/ultrastrong/" +
+                  "flux_calib/SDSS_r/SLOAN_SDSS.r.dat",
+                  "i": "/Users/antoniafernandezfigueroa/phd/ultrastrong/" +
+                  "flux_calib/SDSS_i/SLOAN_SDSS.i.dat"}
+    band_transmission = pd.read_csv(dict_bands[band], sep=' ', names=['wavelength', 'transmission'])
+    max_trans = np.max(band_transmission['transmission'])
+    band_transmission['transmission'] *= 1. / max_trans
+    band_trans = band_transmission['transmission'].to_numpy()
+    band_wav = band_transmission['wavelength'].to_numpy()
+    if band_wav[0] < wav[0]:
+        # create new wavelength array that extends until band_wav[0]
+        wav_step = wav[1] - wav[0]
+        new_wav = np.arange(band_wav[0], wav[0] - wav_step, wav_step)
+        new_wav = np.append(new_wav, wav)
 		# create new spectrum array that extends until band_wav[0]
 		new_spec = np.zeros(new_wav.shape)
 		new_spec[-1 * (len(spec) + 1):-1] = spec

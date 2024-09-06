@@ -1187,16 +1187,10 @@ def calc_mag(flux, band):
     sun_app_mag = {"r": -26.93, "i": -26.37}
     L_bol_sun = 3.828 * 10**33 * u.erg / u.s
     L_sun = L_bol_sun
-    #L_sun = L_bol_sun * 10**((4.74 - sun_abs_mag[band])/2.5)
-    #print(f"The luminosity of the sun is {L_sun}")
+    # L_sun = L_bol_sun * 10**((4.74 - sun_abs_mag[band])/2.5)
+    # print(f"The luminosity of the sun is {L_sun}")
     d_sun = 1.495978707 * 10**11 * u.m
     f_sun = L_sun / (4 * np.pi * d_sun**2)
     f_sun = f_sun.to(u.erg / u.s / u.cm**2).value
     mag = -2.5 * np.log10(flux / f_sun) + sun_app_mag[band]
     return mag
-
-
-
-
-
-
