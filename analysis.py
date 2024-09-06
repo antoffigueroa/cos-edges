@@ -102,7 +102,8 @@ wratio4_abs_vac = wl_abs_vac[0]/wl_abs_vac[4]
 wratio5_abs_vac = wl_abs_vac[0]/wl_abs_vac[5]
 wratio6_abs_vac = wl_abs_vac[0]/wl_abs_vac[6]
 
-gal_names = {'00045': 'Face-on', '00046': 'Edge-on', '00047': 'Merging', 'G7-J1216mosaic': 'G7-J1216'}
+gal_names = {'00045': 'Face-on', '00046': 'Edge-on', '00047': 'Merging',
+             'G7-J1216mosaic': 'G7-J1216'}
 # Create model
 
 
@@ -182,6 +183,7 @@ def hgamma_hbeta_model_vac(x, *params):
     y = gaussian1 + gaussian2
     return y
 
+
 def n_hgamma_hbeta_model_vac(x, *params):
     n = int(len(params) / 4)
     y = 0
@@ -191,8 +193,9 @@ def n_hgamma_hbeta_model_vac(x, *params):
         sigma = params[4*i + 2]
         A2 = params[4*i + 3]
         comp = [A1, mu, sigma, A2]
-        y = y + hgamma_hbeta_model_vac(x, *comp) 
+        y = y + hgamma_hbeta_model_vac(x, *comp)
     return y
+
 
 def n_hgamma_hbeta_model_air(x, *params):
     n = int(len(params) / 4)
@@ -203,7 +206,7 @@ def n_hgamma_hbeta_model_air(x, *params):
         sigma = params[4*i + 2]
         A2 = params[4*i + 3]
         comp = [A1, mu, sigma, A2]
-        y = y + hgamma_hbeta_model_air(x, *comp) 
+        y = y + hgamma_hbeta_model_air(x, *comp)
     return y
 
 
@@ -2137,7 +2140,6 @@ def fit_caii(wav, spec, var, redshift, wav_type='air', plot=False, system=None,
     return popt_caii_h_k, pcov_caii_h_k
 
 
-
 def hbeta_hgamma_fluxes(popt, n=1):
     """
     Calculates the Hbeta and Hgamma flux of a given spectrum.
@@ -2472,7 +2474,8 @@ def flux_maps(wav, data, var, redshift, mask_oii, mask_hbeta, separate=False,
                 if mask_hbeta[y, x]:
                     popt, pcov = four_gaussian_fitting(wav, spectrum, redshift,
                                                        var=variance, plot=plot,
-                                                       coord=(x, y), wav_type=wav_type)
+                                                       coord=(x, y),
+                                                       wav_type=wav_type)
                     if type(popt) != int:
                         perr = np.sqrt(np.diag(pcov))
                         hbeta_flux_map[y, x] = (popt[4] * popt[5] *
@@ -2489,7 +2492,8 @@ def flux_maps(wav, data, var, redshift, mask_oii, mask_hbeta, separate=False,
                 else:
                     popt, pcov = two_gaussian_fitting(wav, spectrum, redshift,
                                                       var=variance, plot=plot,
-                                                      coord=(x, y), wav_type=wav_type)
+                                                      coord=(x, y),
+                                                      wav_type=wav_type)
                 if type(popt) != int:
                     perr = np.sqrt(np.diag(pcov))
                     if separate:
