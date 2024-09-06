@@ -7,6 +7,8 @@
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, EarthLocation
+from astropy.coordinates import solar_system_ephemeris, get_body_barycentric
+from astropy.constants import c
 from astropy.time import Time
 import astropy.units as u
 import astropy.constants as consts
@@ -552,6 +554,35 @@ def flux_calib(wav, spec, target_mag, band='r'):
 	print(mag)
 	return new_wav, new_spec, new_band_trans, filtered_spec
 
-
+def apply_barycentric_correction_and_save(input_fits_path, output_fits_path):
+    # Load the FITS data and header
+    with fits.open(input_fits_path) as hdul:
+        hdr = hdul[0].header
+        data = hdul[0].data
+    # Extract required header information
+    racenter = hdr['CRVAL1']
+    decenter = hdr['CRVAL2']
+    expstart = hdr['DATE-BEG']
+    # Location of Keck
+    keck = EarthLocation.from_geodetic(lat=19.8283 * u.deg, lon=-155.4783 * u.deg, height=4160 * u.m)
+    # Sky coordinates of the observation
+    sc = SkyCoord(ra=racenter * u.deg, dec=decenter * u.deg)
+    # Time of the observation
+    time = Time(expstart, format='isot', scale='utc')
+    # Calculate the barycentric velocity correction
+    barycorr = sc.radial_velocity_correction(obstime=time, location=keck)
+    # Convert the correction from velocity to wavelength shift
+    barycorr_value = barycorr.to(u.km / u.s).value
+    barycorr_factor = (1 + barycorr_value / c.to(u.km / u.s).value)
+    print(f'Barycentric velocity correction: {barycorr_value} km/s')
+    print(f'Barycentric correction factor: {barycorr_factor}')
+    # Update the wavelength axis in the FITS header
+    original_crval3 = hdr['CRVAL3']
+    hdr['CRVAL3'] = original_crval3 * barycorr_factor
+    hdr['CDELT3'] = hdr['CDELT3'] * barycorr_factor
+    hdr.add_history(f'Barycentric correction applied: {barycorr_value} km/s')
+    # Save the updated data and header into a new FITS file
+    fits.writeto(output_fits_path, data, header=hdr, overwrite=True)
+    print(f'Barycentric corrected data saved to {output_fits_path}')
 
 
