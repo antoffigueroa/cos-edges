@@ -15,12 +15,13 @@ from vorbin.voronoi_2d_binning import voronoi_2d_binning
 from astropy.wcs import WCS
 import pyregion
 from pyregion.region_to_filter import as_region_filter
+import prepare
 
 # Define useful constants
 c = const.c.to('km/s').value
 
 
-def read_cube(data_path, var_path, ret_hdr=True):
+def read_cube(data_path, var_path, ret_hdr=True, bary_corr=False):
     """
     Reads the data from a fits file
 
@@ -66,6 +67,8 @@ def read_cube(data_path, var_path, ret_hdr=True):
     # get wavelength array
     wave = np.linspace(lamstart, lamstart + deltalam*lamlength - 1,
                        num=lamlength)
+    if bary_corr:
+        wave = prepare.bary_correction(wave, hdr1)
     if ret_hdr:
         return cube1, vcube, wave, hdr1
     else:
