@@ -28,7 +28,8 @@ wl_oiii_r = 5006.843
 wratio2 = wl_oii_l/wl_oii_r
 
 
-def plot_fit(wav, spec, popt, model, redshift, coord=None, save=False, wav_type='air'):
+def plot_fit(wav, spec, popt, model, redshift, coord=None, save=False,
+             wav_type='air'):
     """
     plots the fitted emission or absorption lines.
 
@@ -69,10 +70,12 @@ def plot_fit(wav, spec, popt, model, redshift, coord=None, save=False, wav_type=
     plt.xlabel(r"Wavelength [$\AA$]")
     plt.ylabel(r"Flux [10$^{-16}$ erg/s/cm$^{2}$/arcsec$^{2}$/$\AA$]")
     if model == "hbeta_hgamma":
-        fig = plot_hbeta_hgamma_fit(wav, spec, popt, fig, redshift, wav_type=wav_type)
+        fig = plot_hbeta_hgamma_fit(wav, spec, popt, fig, redshift,
+                                    wav_type=wav_type)
         fig.suptitle(r"H$\gamma$ and H$\beta$ fits")
     elif model == "oii_doublet":
-        fig = plot_oii_doublet(wav, spec, popt, fig, redshift, wav_type=wav_type)
+        fig = plot_oii_doublet(wav, spec, popt, fig, redshift,
+                               wav_type=wav_type)
         fig.suptitle(r"[O II] doublet fit")
     elif model == "all_lines":
         fig = plot_all_lines(wav, spec, popt, fig, redshift)
@@ -136,9 +139,9 @@ def plot_hbeta_hgamma_fit(wav, spec, popt, fig, redshift, coord=None,
         figure containing the plot.
     """
     if wav_type == 'air':
-    	model = analysis.n_hgamma_hbeta_model_air
+        model = analysis.n_hgamma_hbeta_model_air
     elif wav_type == 'vac':
-    	model = analysis.n_hgamma_hbeta_model_vac
+        model = analysis.n_hgamma_hbeta_model_vac
     var = np.zeros(wav.shape)
     ax1 = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
