@@ -521,7 +521,8 @@ def flux_calib(wav, spec, target_mag, band='r'):
                   "flux_calib/SDSS_r/SLOAN_SDSS.r.dat",
                   "i": "/Users/antoniafernandezfigueroa/phd/ultrastrong/" +
                   "flux_calib/SDSS_i/SLOAN_SDSS.i.dat"}
-    band_transmission = pd.read_csv(dict_bands[band], sep=' ', names=['wavelength', 'transmission'])
+    band_transmission = pd.read_csv(dict_bands[band], sep=' ',
+                                    names=['wavelength', 'transmission'])
     max_trans = np.max(band_transmission['transmission'])
     band_transmission['transmission'] *= 1. / max_trans
     band_trans = band_transmission['transmission'].to_numpy()
@@ -531,39 +532,40 @@ def flux_calib(wav, spec, target_mag, band='r'):
         wav_step = wav[1] - wav[0]
         new_wav = np.arange(band_wav[0], wav[0] - wav_step, wav_step)
         new_wav = np.append(new_wav, wav)
-		# create new spectrum array that extends until band_wav[0]
-		new_spec = np.zeros(new_wav.shape)
-		new_spec[-1 * (len(spec) + 1):-1] = spec
-		new_spec[new_spec == 0] = np.nanmedian(spec)
-		# cut them, so they have the same range as band_wav
-		max_wav = band_wav[-1]
-		p_1 = (np.abs(new_wav - max_wav)).argmin()
-		new_spec = new_spec[0:p_1]
-		new_wav = new_wav[0:p_1]
-	elif band_wav[-1] > wav[-1]:
-		# create new wavelength array that extends until band_wav[-1]
-		wav_step = wav[-1] - wav[-2]
-		new_wav = np.arange(wav[-1] + wav_step, band_wav[-1], wav_step)
-		new_wav = np.append(wav, new_wav)
-		# create new spectrum array that extends until band_wav[-1]
-		new_spec = np.zeros(new_wav.shape)
-		new_spec[0:wav.shape[0]] = spec
-		new_spec[new_spec == 0] = np.nanmedian(spec)
-		# cut them, so they have the same range as band_wav
-		max_wav = band_wav[0]
-		p_1 = (np.abs(new_wav - max_wav)).argmin()
-		new_spec = new_spec[p_1:-1]
-		new_wav = new_wav[p_1:-1]
-	else:
-		return
-	# interpolate the band_trans array so it has the same sampling as wav
-	new_band_trans = np.interp(new_wav, band_wav, band_trans)
-	filtered_spec = new_spec * new_band_trans
-	flux_band = integrate.trapezoid(filtered_spec, x=new_wav)
-	print(flux_band)
-	mag = useful.calc_mag(flux_band * 10**-17, band)
-	print(mag)
-	return new_wav, new_spec, new_band_trans, filtered_spec
+        # create new spectrum array that extends until band_wav[0]
+        new_spec = np.zeros(new_wav.shape)
+        new_spec[-1 * (len(spec) + 1):-1] = spec
+        new_spec[new_spec == 0] = np.nanmedian(spec)
+        # cut them, so they have the same range as band_wav
+        max_wav = band_wav[-1]
+        p_1 = (np.abs(new_wav - max_wav)).argmin()
+        new_spec = new_spec[0:p_1]
+        new_wav = new_wav[0:p_1]
+    elif band_wav[-1] > wav[-1]:
+        # create new wavelength array that extends until band_wav[-1]
+        wav_step = wav[-1] - wav[-2]
+        new_wav = np.arange(wav[-1] + wav_step, band_wav[-1], wav_step)
+        new_wav = np.append(wav, new_wav)
+        # create new spectrum array that extends until band_wav[-1]
+        new_spec = np.zeros(new_wav.shape)
+        new_spec[0:wav.shape[0]] = spec
+        new_spec[new_spec == 0] = np.nanmedian(spec)
+        # cut them, so they have the same range as band_wav
+        max_wav = band_wav[0]
+        p_1 = (np.abs(new_wav - max_wav)).argmin()
+        new_spec = new_spec[p_1:-1]
+        new_wav = new_wav[p_1:-1]
+    else:
+        return
+    # interpolate the band_trans array so it has the same sampling as wav
+    new_band_trans = np.interp(new_wav, band_wav, band_trans)
+    filtered_spec = new_spec * new_band_trans
+    flux_band = integrate.trapezoid(filtered_spec, x=new_wav)
+    print(flux_band)
+    mag = useful.calc_mag(flux_band * 10**-17, band)
+    print(mag)
+    return new_wav, new_spec, new_band_trans, filtered_spec
+
 
 def apply_barycentric_correction_and_save(input_fits_path, output_fits_path):
     # Load the FITS data and header
@@ -575,7 +577,9 @@ def apply_barycentric_correction_and_save(input_fits_path, output_fits_path):
     decenter = hdr['CRVAL2']
     expstart = hdr['DATE-BEG']
     # Location of Keck
-    keck = EarthLocation.from_geodetic(lat=19.8283 * u.deg, lon=-155.4783 * u.deg, height=4160 * u.m)
+    keck = EarthLocation.from_geodetic(lat=19.8283 * u.deg,
+                                       lon=-155.4783 * u.deg,
+                                       height=4160 * u.m)
     # Sky coordinates of the observation
     sc = SkyCoord(ra=racenter * u.deg, dec=decenter * u.deg)
     # Time of the observation
@@ -595,5 +599,3 @@ def apply_barycentric_correction_and_save(input_fits_path, output_fits_path):
     # Save the updated data and header into a new FITS file
     fits.writeto(output_fits_path, data, header=hdr, overwrite=True)
     print(f'Barycentric corrected data saved to {output_fits_path}')
-
-
