@@ -25,9 +25,8 @@ ppxf_dir = path.dirname(path.realpath(util.__file__))
 R = 900
 
 
-
-
-def get_goodpixels_and_noise(loglam_gal, var, z, mask_emission, LRIS_blue=False, bad_sky=None):
+def get_goodpixels_and_noise(loglam_gal, var, z, mask_emission,
+                             LRIS_blue=False, bad_sky=None):
     """
     Return the goodpixels and a cleaned noise array based on where there
     are infs, nans in the variance array. Replace these with the median
@@ -75,7 +74,8 @@ def get_goodpixels_and_noise(loglam_gal, var, z, mask_emission, LRIS_blue=False,
     # Catches the bad pixels in the edge of the detector on LRIS blue side
     if LRIS_blue:
         obs_lam = loglam_gal * (z + 1)
-        edges = np.where((obs_lam < 3875) | ((obs_lam > 4925) & (obs_lam < 5610)))[0]
+        edges = np.where((obs_lam < 3875) | ((obs_lam > 4925) &
+                         (obs_lam < 5610)))[0]
     # Catches infs, nans and where the noise spectrum is zero
     # Remove these high error pixels if they are in goodpixels
         goodpix = np.array([pix for pix in goodpix0
@@ -87,12 +87,15 @@ def get_goodpixels_and_noise(loglam_gal, var, z, mask_emission, LRIS_blue=False,
                             if (pix not in high_err_pix)])
     # Remove the parts where the sky subtraction was not very good
     if bad_sky is not None:
-        sky_trim = np.where((loglam_gal > bad_sky[0]) | ((loglam_gal > bad_sky[1]) & (loglam_gal < bad_sky[2])))[0]
+        sky_trim = np.where((loglam_gal > bad_sky[0]) |
+                            ((loglam_gal > bad_sky[1]) &
+                             (loglam_gal < bad_sky[2])))[0]
         goodpix = np.array([pix for pix in goodpix0
                             if (pix not in sky_trim)])
         if len(bad_sky) > 3:
             for i in range(int((len(bad_sky) - 3) / 2)):
-                more_sky_trim = np.where((loglam_gal > bad_sky[2*i + 3]) & (loglam_gal < bad_sky[2*i + 4]))[0]
+                more_sky_trim = np.where((loglam_gal > bad_sky[2*i + 3]) &
+                                         (loglam_gal < bad_sky[2*i + 4]))[0]
                 goodpix = np.array([pix for pix in goodpix
                                     if (pix not in more_sky_trim)])
     # Even though these pixels have been exluded from goodpix already,
@@ -144,7 +147,8 @@ def determine_goodpixels(lam_gal, z):
 
 
 def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
-              reddening=False, ebv=None, log_rebin=False, FWHM_gal=None, LRIS_blue=False, bad_sky=None):
+              reddening=False, ebv=None, log_rebin=False, FWHM_gal=None,
+              LRIS_blue=False, bad_sky=None):
     """
     applies ppxf to a spectrum.
 
@@ -196,7 +200,8 @@ def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
     linvar_gal = var
     linlam_gal = wav
     if LRIS_blue:
-        edges = np.where((linlam_gal < 3975) | ((linlam_gal > 4925) & (linlam_gal < 5610)))[0]
+        edges = np.where((linlam_gal < 3975) | ((linlam_gal > 4925) &
+                         (linlam_gal < 5610)))[0]
         linvar_gal[edges] = 0
     linlam_gal = linlam_gal / (1 + redshift)
     logflux_gal, loglam_gal, velscale = util.log_rebin(lam=[linlam_gal.min(),
@@ -209,7 +214,8 @@ def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
     if FWHM_gal is None:
         FWHM_gal = loglam_gal / R
     goodpix, noise = get_goodpixels_and_noise(loglam_gal, logvar, redshift,
-                                              True, LRIS_blue=LRIS_blue, bad_sky=bad_sky)
+                                              True, LRIS_blue=LRIS_blue,
+                                              bad_sky=bad_sky)
     # goodpix = determine_goodpixels(loglam_gal, redshift)
     # Read the list of filenames from the E-Miles Single Stellar Population
     # library by Vazdekis (2016, MNRAS, 463, 3409) http://miles.iac.es/.
@@ -217,8 +223,11 @@ def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
     #
     vazdekis = glob.glob(ppxf_dir +
                          '/miles_models/EMILES_BASTI_BASE_KB_FITS/*.fits')
-    pathname = ppxf_dir + '/miles_models/EMILES_BASTI_BASE_KB_FITS/EMILES_BASTI_BASE_KB.npz'
-    miles = lib.sps_lib(pathname, velscale, {"lam": loglam_gal, "fwhm": FWHM_gal}, norm_range=[5070, 5950])
+    pathname = ppxf_dir + '/miles_models/EMILES_BASTI_BASE_KB_FITS/' + \
+                          'EMILES_BASTI_BASE_KB.npz'
+    miles = lib.sps_lib(pathname, velscale,
+                        {"lam": loglam_gal, "fwhm": FWHM_gal},
+                        norm_range=[5070, 5950])
     stars_templates = miles.templates.reshape(miles.templates.shape[0], -1)
     FWHM_tem = 2.51     # Vazdekis+16 spectra have a constant resolution
     #                     FWHM of 2.51A.
@@ -281,7 +290,7 @@ def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
     tie_balmer = False
     limit_dbts = False
     gas_tem, gas_names, lw = util.emission_lines(miles.ln_lam_temp,
-                                                 [loglam_gal[0], 
+                                                 [loglam_gal[0],
                                                   loglam_gal[-1]],
                                                  FWHM_gal[0],
                                                  tie_balmer=tie_balmer,
@@ -314,7 +323,8 @@ def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
     #           degree=degree, velscale_ratio=velscale_ratio)
     if fit_all:
         goodpix, noise = get_goodpixels_and_noise(loglam_gal, logvar, redshift,
-                                                  False, LRIS_blue=LRIS_blue, bad_sky=bad_sky)
+                                                  False, LRIS_blue=LRIS_blue,
+                                                  bad_sky=bad_sky)
         pp = ppxf(templates_combined, logflux_gal, noise, velscale,
                   start_components, goodpixels=goodpix, moments=moments,
                   degree=degree, mdegree=mdegree, lam=loglam_gal,
@@ -364,13 +374,15 @@ def remove_continuum_cube(wav, cube, var_cube, redshift, LRIS_blue=False):
                                        [4450*(1+redshift), 4550*(1+redshift)])
             if snr < 5.:
                 continue
-            pp, linlam_gal, loglam_gal = ppxf_spec(wav, spec, var, redshift, LRIS_blue=LRIS_blue)
+            pp, linlam_gal, loglam_gal = ppxf_spec(wav, spec, var, redshift,
+                                                   LRIS_blue=LRIS_blue)
             new_spec = remove_continuum_spec(spec, pp, linlam_gal, loglam_gal)
             cube_new[:, i, j] = new_spec
     return cube_new, var_cube
 
 
-def remove_continuum_spec(spec, pp, linlam_gal, loglam_gal, save=True, em_lines=True):
+def remove_continuum_spec(spec, pp, linlam_gal, loglam_gal, save=True,
+                          em_lines=True):
     """
     removes the continuum in a single spectrum.
 
@@ -432,7 +444,8 @@ def get_velocity(wav, spec, var, redshift, LRIS_blue=False):
     velocity : float
         stellar velocity calculated by ppxf.
     """
-    pp, linlam_gal, loglam_gal = ppxf_spec(wav, spec, var, redshift, LRIS_blue=LRIS_blue)
+    pp, linlam_gal, loglam_gal = ppxf_spec(wav, spec, var, redshift,
+                                           LRIS_blue=LRIS_blue)
     velocity = pp.sol[0]
     disp = pp.sol[1]
     return velocity, disp
@@ -467,9 +480,10 @@ def get_age_metal(wav, spec, var, redshift, LRIS_blue=False):
     pp, linlam_gal, loglam_gal = ppxf_spec(wav, spec, var, redshift, degree=-1,
                                            mdegree=10, LRIS_blue=LRIS_blue)
     FWHM_gal = loglam_gal / R
-    pathname = ppxf_dir + '/miles_models/EMILES_BASTI_BASE_KB_FITS/EMILES_BASTI_BASE_KB.npz'
+    pathname = ppxf_dir + '/miles_models/EMILES_BASTI_BASE_KB_FITS/' + \
+                          'EMILES_BASTI_BASE_KB.npz'
     miles = lib.sps_lib(pathname, pp.velscale, FWHM_gal[0],
-                      norm_range=[5070, 5950])
+                        norm_range=[5070, 5950])
     reg_dim = miles.templates.shape[1:]
     light_weights = pp.weights[~pp.gas_component]
     light_weights = light_weights.reshape(reg_dim)
