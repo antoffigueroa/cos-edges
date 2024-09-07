@@ -36,6 +36,10 @@ def read_cube(data_path, var_path, ret_hdr=True, bary_corr=False):
     ret_hdr : boolean
         whether to return header or not. Default is True.
 
+    bary_corr : boolean
+        if True, it will perform barycentric correction to the wavelength
+        array. Default is False.
+
     Returns
     -------
     cube1 : :obj:'~numpy.ndarray'
@@ -45,7 +49,8 @@ def read_cube(data_path, var_path, ret_hdr=True, bary_corr=False):
         variance cube
 
     wave : :obj:'~numpy.ndarray'
-        wavelength array
+        wavelength array. If bary_corr is True, this wavelength will be
+        barycentric corrected.
 
     hdr1 : FITS header object
         fits header. Only if ret_hdr is True.
@@ -312,7 +317,7 @@ def cut_spec_n(wav, spec, var, delta, wobs_array, n, cont=False, four=False,
         [wobs[i] - delta, wobs[i] + delta].
 
     n : int
-        number of windows to perform on the spectra
+        number of cuts to perform on the spectra
 
     cont : boolean
         if True, will perform a simple continuum subtraction around wobs.
@@ -597,13 +602,13 @@ def snr_line(wav, spec, var, line, full=False):
 
     Returns
     -------
-    median_snr : float
+    snr : float
         integrated SNR value.
 
-    median_signal : float
+    signal : float
         integrated signal value. Only if full is True.
 
-    noise_median : float
+    median : float
         integrated noise value. Only if full is True.
     """
     delta_lambda = wav[1] - wav[0]
@@ -633,8 +638,8 @@ def snr_line_cube(wav, data, var_cube, line, full=False):
     var_cube : :obj:'~numpy.ndarray'
         variance cube of the data.
 
-    window : 2-tuple of float
-        wavelength window to perform calculation of SNR.
+    line : float
+        wavelength of the line.
 
     full : boolean
         if True, apart from returning the SNR value, it returns the median
@@ -1183,6 +1188,22 @@ def create_cube_vorbin(vorbin_path, spec_list, var_list, data_path,
 
 
 def calc_mag(flux, band):
+    """
+    Calculates magnitudes from flux. DOESN'T WORK.
+
+    Parameters
+    ----------
+    flux : float
+        flux of the object in erg / s / cm^2
+
+    band : str
+        band that this flux was calculated in.
+
+    Returns
+    -------
+    mag : float
+        calculated magnitude of the object.
+    """
     sun_abs_mag = {"r": 8, "i": 5.21}
     sun_app_mag = {"r": -26.93, "i": -26.37}
     L_bol_sun = 3.828 * 10**33 * u.erg / u.s
