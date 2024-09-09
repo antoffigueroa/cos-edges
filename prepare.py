@@ -240,6 +240,13 @@ def ebv_cube(wav, data, var, redshift, mask=None, plot=False, wav_type='air',
     plot : boolean
         if True, it will plot the Hbeta and Hgamma fits. Default is False.
 
+    wav_type : str
+        type of wavelength. Supported types are "air" and "vac". Default is
+        "air".
+
+    n : int
+        number of velocity components. Default is 1.
+
     Returns
     -------
     ebv : :obj:'~numpy.ndarray'
@@ -302,6 +309,13 @@ def dust_extinction_correction(wav, data, var, redshift, mask=None,
     ebv_map : :obj:'~numpy.ndarray'
         E(B - V) array. If None, it is calculated using ebv_cube. Default is
         None.
+
+    wav_type : str
+        type of wavelength. Supported types are "air" and "vac". Default is
+        "air".
+
+    n : int
+        number of velocity components. Default is 1.
 
     Returns
     -------
@@ -367,6 +381,10 @@ def remove_emission_lines(wav, spec, var, redshift, wav_type='air',
     wav_type : str
         wavelength type of the wavelength array. The options are "air" for air
         wavelengths and "vac" for vacuum wavelengths. Default is "air".
+
+    only_balmer : boolean
+        if True, only removes the balmer series lines and ignores the rest.
+        Default is False.
 
     Returns
     -------
@@ -517,6 +535,38 @@ def bary_correction(wav, header):
 
 
 def flux_calib(wav, spec, target_mag, band='r'):
+    """
+    Performs flux calibrations using SDSS photometry. DOESN'T WORK.
+
+    Parameters
+    ----------
+    wav : :obj:'~numpy.ndarray'
+        wavelength array.
+
+    spec : :obj:'~numpy.ndarray'
+        flux array.
+
+    target_mag : float
+        SDSS magnitude of the relevant object.
+
+    band : str
+        SDSS used to flux calibrate.
+
+    Returns
+    -------
+    new_wav : :obj:'~numpy.ndarray'
+        wavelength array cut in the aforementioned band.
+
+    new_spec : :obj:'~numpy.ndarray'
+        flux array cut in the aforementioned band.
+
+    new_band_trans : :obj:'~numpy.ndarray'
+        band transmision interpolated to have the same sampling as the
+        spectrum.
+
+    filtered_spec : :obj:'~numpy.ndarray'
+        spectrum after the filter is applied to it.
+    """
     dict_bands = {'r': "/Users/antoniafernandezfigueroa/phd/ultrastrong/" +
                   "flux_calib/SDSS_r/SLOAN_SDSS.r.dat",
                   "i": "/Users/antoniafernandezfigueroa/phd/ultrastrong/" +
@@ -568,6 +618,18 @@ def flux_calib(wav, spec, target_mag, band='r'):
 
 
 def apply_barycentric_correction_and_save(input_fits_path, output_fits_path):
+    """
+    opens a fits file, applies barycentric correction to the wavelength and
+    saves the corrected file.
+
+    Parameters
+    ----------
+    input_fits_path : str
+        name of the original fits file.
+
+    output_fits_path : str
+        desired name of the outputed fits file.
+    """
     # Load the FITS data and header
     with fits.open(input_fits_path) as hdul:
         hdr = hdul[0].header
