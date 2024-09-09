@@ -57,6 +57,10 @@ def plot_fit(wav, spec, popt, model, redshift, coord=None, save=False,
     save : boolean
         if True, it will save the plot to a directory named model + _fits. This
         directory will be inside the working directory. Default is False.
+
+     wav_type : str
+        type of wavelength. Supported types are "air" and "vac". Default is
+        "air".
     """
     file = model+"_fits/"
     fig = plt.figure()
@@ -133,6 +137,10 @@ def plot_hbeta_hgamma_fit(wav, spec, popt, fig, redshift, coord=None,
     file : str
         name of the directory to save the fits in.
 
+     wav_type : str
+        type of wavelength. Supported types are "air" and "vac". Default is
+        "air".
+
     Returns
     -------
     fig : matplotlib.figure.Figure
@@ -191,6 +199,10 @@ def plot_oii_doublet(wav, spec, popt, fig, redshift, coord=None, save=False,
 
     file : str
         name of the directory to save the fits in.
+
+     wav_type : str
+        type of wavelength. Supported types are "air" and "vac". Default is
+        "air".
 
     Returns
     -------
