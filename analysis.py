@@ -185,6 +185,25 @@ def hgamma_hbeta_model_vac(x, *params):
 
 
 def n_hgamma_hbeta_model_vac(x, *params):
+    """
+    calculates a model with n pairs of Hbeta and Hgamma lines. The lines will
+    be separated by their wavelength ratio in the vacuumn.
+
+    Parameters
+    ----------
+    x : :obj:'~numpy.ndarray'
+        x-values for the gaussians
+
+    *params : :obj:'~numpy.ndarray'
+        gaussian parameters. They must be in the following order: A1
+        (amplitude of the Hgamma line), mu (centroid of Hgamma), sigma
+        (standard deviation) and A2 (amplitude of the Hbeta line).
+
+    Returns
+    -------
+    y : :obj:'~numpy.ndarray'
+        y-values of the model.
+    """
     n = int(len(params) / 4)
     y = 0
     for i in range(n):
@@ -198,6 +217,25 @@ def n_hgamma_hbeta_model_vac(x, *params):
 
 
 def n_hgamma_hbeta_model_air(x, *params):
+    """
+    calculates a model with n pairs of Hbeta and Hgamma lines. The lines will
+    be separated by their wavelength ratio in the air.
+
+    Parameters
+    ----------
+    x : :obj:'~numpy.ndarray'
+        x-values for the gaussians
+
+    *params : :obj:'~numpy.ndarray'
+        gaussian parameters. They must be in the following order: A1
+        (amplitude of the Hgamma line), mu (centroid of Hgamma), sigma
+        (standard deviation) and A2 (amplitude of the Hbeta line).
+
+    Returns
+    -------
+    y : :obj:'~numpy.ndarray'
+        y-values of the model.
+    """
     n = int(len(params) / 4)
     y = 0
     for i in range(n):
@@ -1343,6 +1381,9 @@ def hbeta_hgamma_fitting(wav, spec, redshift, plot=False, var=None,
         type of wavelength. Supported types are "air" and "vac". Default is
         "air".
 
+    n : int
+        number of Hbeta and Hgamma components to fit. Default is 1.
+
     Returns
     -------
     popt : :obj:'~numpy.ndarray'
@@ -2041,11 +2082,11 @@ def fit_caii(wav, spec, var, redshift, wav_type='air', plot=False, system=None,
 
     Returns
     -------
-    popt_feii : :obj:'~numpy.ndarray'
+    popt_caii_h_k : :obj:'~numpy.ndarray'
         optimal parameters found by curve_fit. If the fit is unsuccesful, it
         will return 0.
 
-    pcov_feii : :obj:'~numpy.ndarray'
+    pcov_caii_h_k : :obj:'~numpy.ndarray'
         covariance matrix calculated by curve_fit. If the fit is unsuccesful,
         it will return 0.
     """
@@ -2149,6 +2190,9 @@ def hbeta_hgamma_fluxes(popt, n=1):
     popt : :obj:'~numpy.ndarray'
         optimal parameters of the Hbeta-Hgamma fit calculated by curve_fit.
 
+    n : int
+        number of Hbeta and Hgamma pairs to fit.
+
     Returns
     -------
     hbeta_flux : float
@@ -2173,7 +2217,7 @@ def hbeta_hgamma_fluxes(popt, n=1):
 
 
 def calculate_velocity(wav, spec, redshift, var=None,
-                       model=four_gaussian_model_air, wav_type='air'):
+                       model="four_gaussian", wav_type='air'):
     """
     Calculates velocity of a spectrum given a redshift.
 
@@ -2192,8 +2236,9 @@ def calculate_velocity(wav, spec, redshift, var=None,
         variance array of the data. If not None, the variance will be
         considered while doing the fit. Default is None.
 
-    model : function
-        model to use in the fitting.
+    model : str
+        model to use in the fitting. Supported models are "four_gaussian" and
+        "two_gaussian".
 
     wav_type : str
         type of wavelength. Supported types are "air" and "vac". Default is
@@ -2205,10 +2250,10 @@ def calculate_velocity(wav, spec, redshift, var=None,
         calculated velocity of the spectrum. If the fit is unsuccessful, it
         will return nan.
     """
-    if model == four_gaussian_model_air:
+    if model == "four_gaussian":
         popt, pcov = four_gaussian_fitting(wav, spec, redshift, var=var,
                                            wav_type=wav_type)
-    elif model == two_gaussian_model_air:
+    elif model == "two_gaussian":
         popt, pcov = two_gaussian_fitting(wav, spec, redshift, var=var,
                                           wav_type=wav_type)
     if type(popt) != int:
@@ -2565,6 +2610,10 @@ def sfr_map(hbeta_flux_map, redshift, plot=False, cubeid=None, error=False,
         will only be used if error is True. Hbeta flux error map. Default is
         None.
 
+    flux_factor : float
+        factor to multiply your flux so that it is in units of erg / s / cm^2.
+        Default is 10^-16.
+
     Returns
     -------
     SFR_map : :obj:'~numpy.ndarray'
@@ -2594,7 +2643,7 @@ def sfr_map(hbeta_flux_map, redshift, plot=False, cubeid=None, error=False,
 
 
 def sfr_oii_map(oii_flux_map, redshift, plot=False, cubeid=None, error=False,
-                oii_error=None):
+                oii_error=None, flux_factor=10**(-16)):
     """
     Calculates [O II] SFR map of a data cube. Assumes kroupa IMF.
 
@@ -2623,6 +2672,10 @@ def sfr_oii_map(oii_flux_map, redshift, plot=False, cubeid=None, error=False,
         [O II] flux error map. Will only be used if error is True. Default is
         None.
 
+    flux_factor : float
+        factor to multiply your flux so that it is in units of erg / s / cm^2.
+        Default is 10^-16.
+
     Returns
     -------
     sfr_oii : :obj:'~numpy.ndarray'
@@ -2632,7 +2685,7 @@ def sfr_oii_map(oii_flux_map, redshift, plot=False, cubeid=None, error=False,
         calculated [O II] SFR error map. Only if error is True.
     """
     Dlumincm = useful.d_lumin_cm(redshift)
-    oii_lumin_map = oii_flux_map * 10**(-16) * (4.0 * np.pi * Dlumincm**2.0)
+    oii_lumin_map = oii_flux_map * flux_factor * (4.0 * np.pi * Dlumincm**2.0)
     mk_ms = 0.62
     sfr_oii = 6.58e-42 * oii_lumin_map * mk_ms
     if error:
