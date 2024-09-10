@@ -46,6 +46,14 @@ def get_goodpixels_and_noise(loglam_gal, var, z, mask_emission,
     mask_emission : boolean
         if True, it will mask the emission lines along with the noisy pixels.
 
+    LRIS_blue : boolean
+        if True, it will mask the pixels in the edge of the LRIS blue detector.
+        Default is False.
+
+    bad_sky : n-tuple of float
+        if given, will mask the highlighted areas where there is presumably bad
+        sky lines. Default is None.
+
     Returns
     -------
     goodpix : :obj:'~numpy.ndarray'
@@ -119,6 +127,11 @@ def determine_goodpixels(lam_gal, z):
 
     z : float
         redshift of the relevant object.
+
+    Returns
+    -------
+    goodpix_final : :obj:'~numpy.ndarray'
+        list of unmasked pixels.
     """
     # The observed (i.e not redshift corrected: must undo correction),
     # np.log_e(wavelength) for wavelength in Angstroms. Have already masked
@@ -184,6 +197,17 @@ def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
 
     log_rebin : boolean
         if True, it will assume the data is already logarithmically rebinned.
+
+    FWHM_gal : :obj:'~numpy.ndarray'
+        instrumental FWHM.
+
+    LRIS_blue : boolean
+        if True, it will mask the pixels in the edge of the LRIS blue detector.
+        Default is False.
+
+    bad_sky : n-tuple of float
+        if given, will mask the highlighted areas where there is presumably bad
+        sky lines. Default is None.
 
     Returns
     -------
@@ -357,6 +381,10 @@ def remove_continuum_cube(wav, cube, var_cube, redshift, LRIS_blue=False):
     redshift : float
         redshift of the relevant object.
 
+    LRIS_blue : boolean
+        if True, it will mask the pixels in the edge of the LRIS blue detector.
+        Default is False.
+
     Returns
     -------
     cube_new : :obj:'~numpy.ndarray'
@@ -405,6 +433,14 @@ def remove_continuum_spec(spec, pp, linlam_gal, loglam_gal, save=True,
         if True, it will save the ppxf object with the continuum solution for
         this particular spectrum.
 
+    em_lines : boolean
+        if True, it will fit emission lines simultanbeously, but leave them on
+        after the continuum subtraction. Default is True.
+
+    LRIS_blue : boolean
+        if True, it will mask the pixels in the edge of the LRIS blue detector.
+        Default is False.
+
     Returns
     -------
     new_data : :obj:'~numpy.ndarray'
@@ -439,10 +475,17 @@ def get_velocity(wav, spec, var, redshift, LRIS_blue=False):
     redshift : float
         redshift of the relevant object.
 
+    LRIS_blue : boolean
+        if True, it will mask the pixels in the edge of the LRIS blue detector.
+        Default is False.
+
     Returns
     -------
     velocity : float
         stellar velocity calculated by ppxf.
+
+    disp : float
+        stellar velocity dispersion calculated by ppxf.
     """
     pp, linlam_gal, loglam_gal = ppxf_spec(wav, spec, var, redshift,
                                            LRIS_blue=LRIS_blue)
@@ -468,6 +511,10 @@ def get_age_metal(wav, spec, var, redshift, LRIS_blue=False):
 
     redshift : float
         redshift of the relevant object.
+
+    LRIS_blue : boolean
+        if True, it will mask the pixels in the edge of the LRIS blue detector.
+        Default is False.
 
     Returns
     -------
