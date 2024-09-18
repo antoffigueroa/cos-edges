@@ -368,7 +368,7 @@ def cut_spec_n(wav, spec, var, delta, wobs_array, n, cont=False, four=False,
                 amplitude = max(spec_cut_i)
             if four:
                 p0 = np.array([amplitude, np.mean(wav_cut_i), 1., 1.0])
-                low_bounds = np.array([0, wobs_array[i]-7, 0, 0.5])
+                low_bounds = np.array([0, wobs_array[i]-7, 0, 0])
                 up_bounds = np.array([np.inf, wobs_array[i]+7, 15, 2.0])
             elif bpt:
                 p0 = np.array([amplitude, np.mean(wav_cut_i), 1.])

@@ -369,7 +369,8 @@ def plot_mgii_absorption(wav, spec, var, redshift, popt, pcov, n, system,
 
 def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
                       popt, pcov, n, system, wav_type='air', save=False,
-                      em_line='Hbeta', broad_component=False):
+                      em_line='Hbeta', broad_component=False,
+                      flux_factor=10**(-16)):
     """
     Plots a panel an emission line, along with its fitted components, and a
     second panel with Mg II absorption and its fitted components.
@@ -499,18 +500,20 @@ def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
             component = np.array([popt[0], wobs_abs, sigma_em,
                                   popt[0] * popt[1]])
             label_plot = 'ISM component'
+            comp_color = coolors[0]
         else:
             component = np.array([popt[4 * (i - 1) + 2], popt[4 * (i - 1) + 3],
                                   popt[4 * (i - 1) + 4],
-                                  popt[4 * (i - 1) + 2] *
-                                  popt[4 * (i - 1) + 5]])
+                                  popt[4 * (i - 1) + 2] * popt[4 * (i - 1) + 5]])
             if wobs_abs < popt[4 * (i - 1) + 3]:
                 label_plot = 'Inflow component '+str(n_inflows)
                 n_inflows += 1
+                comp_color = coolors[2]
             else:
                 label_plot = 'Outflow component '+str(i)
                 n_outflows += 1
-        ax2.plot(vel_finer_abs, model(wav_finer_abs, *component), coolors[i],
+                comp_color = coolors[1]
+        ax2.plot(vel_finer_abs, model(wav_finer_abs, *component), comp_color,
                  label=label_plot)
         all_components = all_components + model(wav_finer_abs, *component) - 1
     ax2.plot(vel_finer_abs, all_components + 1, 'grey')

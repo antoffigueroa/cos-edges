@@ -1540,7 +1540,7 @@ def fit_mgii(wav, spec, redshift, plot=False, var=None, system=None,
 
 def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
                 em_line='Hbeta', n=2, system=None, save=False,
-                broad_component=False):
+                broad_component=False, flux_factor=10**(-16)):
     """
     Fits an ISM componnet to the specified emission line. It then fits n
     Mg IIs, forcing one to have the same velocity and velocity dispersion as
@@ -1648,7 +1648,7 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
         alpha1 = params[1]
         y = 1
         gaussian1 = gaussian_model(x, A1, wl_mgii * (1 + z_em), sigma_em)
-        gaussian2 = gaussian_model(x, alpha1*A1,
+        gaussian2 = gaussian_model(x, A1 * alpha1,
                                    wl_mgii * (1 + z_em)/mgii_ratio, sigma_em)
         y = y - gaussian1 - gaussian2
         for i in range(n):
@@ -1660,7 +1660,7 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
                 sigma2 = params[4 * (i - 1) + 4]
                 alpha2 = params[4 * (i - 1) + 5]
                 gaussian3 = gaussian_model(x, A2, mu2, sigma2)
-                gaussian4 = gaussian_model(x, alpha2*A2, mu2/mgii_ratio,
+                gaussian4 = gaussian_model(x, alpha2 * A2, mu2/mgii_ratio,
                                            sigma2)
                 y = y - gaussian3 - gaussian4
         return y
@@ -1669,20 +1669,24 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
                                                     cont=False)
     spec_norm = useful.normalise_spectra(wav_mgii, spec_mgii, var_mgii,
                                          (50, 10, 20, 50), wobs_abs, deg=2)
-    low_bounds = np.array([0, 0, 0, wobs_abs - 20, 0, 0])
-    up_bounds = np.array([1, 1, 1, wobs_abs + 20, 2, 1])
-    p0 = np.array([0.5, 0.5, 0.5, wobs_abs - 1, 0.5, 0.5])
+    low_bounds = np.array([0.2, 0.01])
+    up_bounds = np.array([1, 1.1])
+    p0 = np.array([0.5, 0.5])
     if n > 1:
         for i in range(n - 1):
             low_bounds = np.append(low_bounds,
-                                   np.array([0, wobs_abs - 20, 0, 0]))
+                                   np.array([0.05, wobs_abs - 20, 0, 0.2]))
             up_bounds = np.append(up_bounds,
-                                  np.array([1, wobs_abs + 20, 2, 1]))
-            p0 = np.append(p0, np.array([0.5, wobs_abs, 0.5, 0.5]))
+                                  np.array([1, wobs_abs + 20, 2.5, 1.1]))
+            p0 = np.append(p0, np.array([0.5, wobs_abs, 1., 0.5]))
     bounds = np.array([low_bounds, up_bounds])
     try:
         popt, pcov = fit_absorption(wav_mgii, spec_norm, mgii_ism, p0, bounds,
                                     var=var_mgii)
+        plt.figure()
+        plt.plot(wav_mgii, spec_norm)
+        plt.plot(wav_mgii, mgii_ism(wav_mgii, *popt))
+        plt.show()
     except RuntimeError:
         print('Fit failed')
         return 0, 0
@@ -1691,7 +1695,8 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
                                   wav_mgii, spec_norm, var_mgii, popt_em, popt,
                                   pcov, n, system, wav_type=wav_type,
                                   save=save, em_line=em_line,
-                                  broad_component=broad_component)
+                                  broad_component=broad_component,
+                                  flux_factor=flux_factor)
     return popt, pcov, z_em, sigma_em
 
 
