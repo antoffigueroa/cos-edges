@@ -2230,12 +2230,11 @@ def hbeta_hgamma_fluxes(popt, n=1):
         for i in range(n):
             hgamma_flux += popt[4*i]*popt[4*i + 2]*np.sqrt(2*np.pi)
             hbeta_flux += popt[4*i + 3]*popt[4*i + 2]*np.sqrt(2*np.pi)
-        print(f"Hbeta flux is {hbeta_flux}")
     return hbeta_flux, hgamma_flux
 
 
 def calculate_velocity(wav, spec, redshift, var=None,
-                       model="four_gaussian", wav_type='air'):
+                       model="four_gaussian", wav_type='air', rest_wav=0):
     """
     Calculates velocity of a spectrum given a redshift.
 
@@ -2274,6 +2273,12 @@ def calculate_velocity(wav, spec, redshift, var=None,
     elif model == "two_gaussian":
         popt, pcov = two_gaussian_fitting(wav, spec, redshift, var=var,
                                           wav_type=wav_type)
+    elif model == "one_gaussian":
+        wav_obs = rest_wav * (1 + redshift)
+        wav_cut, spec_cut, var_cut, p0, bounds = useful.cut_spec(wav, spec,
+                                                                 var, 20,
+                                                                 wav_obs)
+        popt, pcov = em_fitting(wav_cut, spec_cut, gaussian_model, p0, bounds)
     if type(popt) != int:
         if wav_type == 'air':
             oii_wav = dict_wav_air['OII_l']
@@ -2286,7 +2291,8 @@ def calculate_velocity(wav, spec, redshift, var=None,
 
 
 def velocity_map(wav, data, var, redshift, mask_oii=None, mask_hbeta=None,
-                 plot=False, cubeid=None, wav_type='air'):
+                 mask_other_line=None, em_line='Halpha', plot=False,
+                 cubeid=None, wav_type='air'):
     """
     Applies calculate_velocity to a data cube. Returns a velocity map.
 
@@ -2316,6 +2322,14 @@ def velocity_map(wav, data, var, redshift, mask_oii=None, mask_hbeta=None,
         as True and the two_gaussian_model in the spaxels marked as False.
         Default is None.
 
+    mask_other_line : :obj:'~numpy.ndarray'
+        if both the other masks are None and this mask is given, it will use a
+        different emission line to calculate the velocity. Default is None.
+
+    em_line : str
+        name of the extra emission line used to calculate the velocity. Only
+        used if mask_other_line is not None. Default is "Halpha".
+
     plot : boolean
         if True, it will plot the velocity map and save it to the working
         directory. Default is False.
@@ -2344,19 +2358,26 @@ def velocity_map(wav, data, var, redshift, mask_oii=None, mask_hbeta=None,
                 spectrum = data[:, y, x]
                 variance = var[:, y, x]
                 if mask_hbeta[y, x]:
-                    if wav_type == 'air':
-                        model = four_gaussian_model_air
-                    elif wav_type == 'vac':
-                        model = four_gaussian_model_vac
+                    model = "four_gaussian"
                 else:
-                    if wav_type == 'air':
-                        model = two_gaussian_model_air
-                    elif wav_type == 'vac':
-                        model = two_gaussian_model_vac
+                    model = "two_gaussian"
                 velocity_map[y, x] = calculate_velocity(wav, spectrum,
                                                         redshift, var=variance,
                                                         model=model,
                                                         wav_type=wav_type)
+            elif mask_halpha is not None:
+                if ~ mask_halpha[y, x]:
+                    continue
+                if wav_type == 'air':
+                    rest_wav = dict_wav_air[em_line]
+                elif wav_type == 'vac':
+                    rest_wav = dict_wav_vac[em_line]
+                model = "one_gaussian"
+                velocity_map[y, x] = calculate_velocity(wav, spectrum,
+                                                        redshift, var=variance,
+                                                        model=model,
+                                                        wav_type=wav_type,
+                                                        rest_wav=rest_wav)
     if plot:
         display.plot_velocity_map(velocity_map, save=True,
                                   system_name=gal_names[cubeid])
