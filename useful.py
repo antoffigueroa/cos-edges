@@ -613,7 +613,7 @@ def snr_line(wav, spec, var, line, full=False):
         integrated noise value. Only if full is True.
     """
     delta_lambda = wav[1] - wav[0]
-    wav_cut, spec_cut, var_cut = cut_spec(wav, spec, var, 20., line,
+    wav_cut, spec_cut, var_cut = cut_spec(wav, spec, var, 5., line,
                                           full=False, cont=True)
     signal = np.sum(spec_cut * delta_lambda)
     noise = np.sqrt(np.sum(var_cut * delta_lambda**2.0))
