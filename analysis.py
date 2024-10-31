@@ -2261,6 +2261,10 @@ def calculate_velocity(wav, spec, redshift, var=None,
         type of wavelength. Supported types are "air" and "vac". Default is
         "air".
 
+    rest_wav : float
+        rest-frame wavelength of the line used to calculate velocity. Default
+        is 0.
+
     Returns
     -------
     velocity : float
@@ -2280,11 +2284,14 @@ def calculate_velocity(wav, spec, redshift, var=None,
                                                                  wav_obs)
         popt, pcov = em_fitting(wav_cut, spec_cut, gaussian_model, p0, bounds)
     if type(popt) != int:
-        if wav_type == 'air':
-            oii_wav = dict_wav_air['OII_l']
-        elif wav_type == 'vac':
-            oii_wav = dict_wav_vac['OII_l']
-        velocity = useful.vel(oii_wav * (1 + redshift), popt[1])
+        if rest_wav == 0:
+            if wav_type == 'air':
+                oii_wav = dict_wav_air['OII_l']
+            elif wav_type == 'vac':
+                oii_wav = dict_wav_vac['OII_l']
+            velocity = useful.vel(oii_wav * (1 + redshift), popt[1])
+        else:
+            velocity = useful.vel(rest_wav * (1 + redshift), popt[1])
     else:
         velocity = np.nan
     return velocity
@@ -2352,11 +2359,11 @@ def velocity_map(wav, data, var, redshift, mask_oii=None, mask_hbeta=None,
     velocity_map = np.full_like(image, np.nan, dtype=np.double)
     for y in range(y_total):
         for x in range(x_total):
+            spectrum = data[:, y, x]
+            variance = var[:, y, x]
             if mask_oii is not None:
                 if ~ mask_oii[y, x]:
                     continue
-                spectrum = data[:, y, x]
-                variance = var[:, y, x]
                 if mask_hbeta[y, x]:
                     model = "four_gaussian"
                 else:
@@ -2365,8 +2372,8 @@ def velocity_map(wav, data, var, redshift, mask_oii=None, mask_hbeta=None,
                                                         redshift, var=variance,
                                                         model=model,
                                                         wav_type=wav_type)
-            elif mask_halpha is not None:
-                if ~ mask_halpha[y, x]:
+            elif mask_other_line is not None:
+                if ~ mask_other_line[y, x]:
                     continue
                 if wav_type == 'air':
                     rest_wav = dict_wav_air[em_line]
