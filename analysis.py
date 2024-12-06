@@ -1519,8 +1519,9 @@ def fit_mgii(wav, spec, redshift, plot=False, var=None, system=None,
         wobs = dict_wav_vac['MgII_l'] * (1 + redshift)
     wav_mgii, spec_mgii, var_mgii = useful.cut_spec(wav, spec, var, 50, wobs,
                                                     full=False, cont=False)
-    spec_norm, var_mgii = useful.normalise_spectra(wav_mgii, spec_mgii, var_mgii,
-                                         (50, 10, 20, 50), wobs, deg=2)
+    spec_norm, var_mgii = useful.normalise_spectra(wav_mgii, spec_mgii,
+                                                   var_mgii, (50, 10, 20, 50),
+                                                   wobs, deg=2)
     low_bounds = np.array([0, wobs - 20, 0, 0])
     up_bounds = np.array([1, wobs + 20, 2, 1])
     p0 = np.array([0.5, wobs, 0.5, 0.5])
@@ -1668,8 +1669,9 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
     wav_mgii, spec_mgii, var_mgii = useful.cut_spec(wav, spec, var, 50,
                                                     wobs_abs, full=False,
                                                     cont=False)
-    spec_norm, var_mgii = useful.normalise_spectra(wav_mgii, spec_mgii, var_mgii,
-                                         (50, 10, 20, 50), wobs_abs, deg=2)
+    spec_norm, var_mgii = useful.normalise_spectra(wav_mgii, spec_mgii,
+                                                   var_mgii, (50, 10, 20, 50),
+                                                   wobs_abs, deg=2)
     low_bounds = np.array([0.2, 0.01])
     up_bounds = np.array([1, 1.1])
     p0 = np.array([0.5, 0.5])
@@ -1687,7 +1689,7 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
         plt.figure()
         plt.plot(wav_mgii, spec_norm)
         plt.plot(wav_mgii, mgii_ism(wav_mgii, *popt))
-        plt.show()            
+        plt.show()
     except RuntimeError:
         print('Fit failed')
         return 0, 0
@@ -1853,22 +1855,25 @@ def fit_five_abs(wav, spec, var, redshift, wav_type='air', plot=False,
     wav_mgii, spec_mgii, var_mgii = useful.cut_spec(wav, spec, var, 50,
                                                     wobs_mgii, full=False,
                                                     cont=False)
-    spec_norm_mgii, var_mgii = useful.normalise_spectra(wav_mgii, spec_mgii, var_mgii,
-                                              (50, 10, 20, 50), wobs_mgii,
-                                              deg=2)
+    spec_norm_mgii, var_mgii = useful.normalise_spectra(wav_mgii, spec_mgii,
+                                                        var_mgii,
+                                                        (50, 10, 20, 50),
+                                                        wobs_mgii, deg=2)
     # cut Mg I
     wav_mgi, spec_mgi, var_mgi = useful.cut_spec(wav, spec, var, 50, wobs_mgi,
                                                  full=False, cont=False)
-    spec_norm_mgi, var_mgi = useful.normalise_spectra(wav_mgi, spec_mgi, var_mgi,
-                                             (11.75, 5, 5, 11.75), wobs_mgi,
-                                             deg=2)
+    spec_norm_mgi, var_mgi = useful.normalise_spectra(wav_mgi, spec_mgi,
+                                                      var_mgi,
+                                                      (11.75, 5, 5, 11.75),
+                                                      wobs_mgi, deg=2)
     # cut Fe II
     wav_feii, spec_feii, var_feii = useful.cut_spec(wav, spec, var, 50,
                                                     wobs_feii, full=False,
                                                     cont=False)
-    spec_norm_feii, var_feii = useful.normalise_spectra(wav_feii, spec_feii, var_feii,
-                                              (12, 5, 27, 50), wobs_feii,
-                                              deg=3)
+    spec_norm_feii, var_feii = useful.normalise_spectra(wav_feii, spec_feii,
+                                                        var_feii,
+                                                        (12, 5, 27, 50),
+                                                        wobs_feii, deg=3)
     # put them all together
     wav_all = np.append(wav_mgii, wav_mgi)
     wav_all = np.append(wav_feii, wav_all)
@@ -2019,9 +2024,10 @@ def fit_feii(wav, spec, var, redshift, wav_type='air', plot=False, system=None,
     wav_feii, spec_feii, var_feii = useful.cut_spec(wav, spec, var, 50,
                                                     wobs_feii, full=False,
                                                     cont=False)
-    spec_norm_feii, var_feii = useful.normalise_spectra(wav_feii, spec_feii, var_feii,
-                                              (40, 5, 30, 50), wobs_feii,
-                                              deg=3)
+    spec_norm_feii, var_feii = useful.normalise_spectra(wav_feii, spec_feii,
+                                                        var_feii,
+                                                        (40, 5, 30, 50),
+                                                        wobs_feii, deg=3)
     p0_feii = np.array([0.5, 0.5])
     low_bounds_feii = np.array([0, 0])
     up_bounds_feii = np.array([1, 1])
@@ -2167,10 +2173,10 @@ def fit_caii(wav, spec, var, redshift, wav_type='air', plot=False, system=None,
                                                                 100, w_central,
                                                                 full=False,
                                                                 cont=False)
-    spec_norm_caii_h_k, var_caii_h_k = useful.normalise_spectra(wav_caii_h_k, spec_caii_h_k,
-                                                  var_caii_h_k,
-                                                  (90, 50, 60, 100), w_central,
-                                                  deg=2)
+    output = useful.normalise_spectra(wav_caii_h_k, spec_caii_h_k,
+                                      var_caii_h_k, (90, 50, 60, 100),
+                                      w_central, deg=2)
+    spec_norm_caii_h_k, var_caii_h_k = output
     p0_caii_h_k = np.array([0.5, 0.5])
     low_bounds_caii_h_k = np.array([0, 0])
     up_bounds_caii_h_k = np.array([1, 1])
@@ -2234,7 +2240,8 @@ def hbeta_hgamma_fluxes(popt, n=1):
 
 
 def calculate_velocity(wav, spec, redshift, var=None,
-                       model="four_gaussian", wav_type='air', rest_wav=0, coord=None):
+                       model="four_gaussian", wav_type='air', rest_wav=0,
+                       coord=None):
     """
     Calculates velocity of a spectrum given a redshift.
 

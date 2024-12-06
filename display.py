@@ -508,7 +508,8 @@ def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
         else:
             component = np.array([popt[4 * (i - 1) + 2], popt[4 * (i - 1) + 3],
                                   popt[4 * (i - 1) + 4],
-                                  popt[4 * (i - 1) + 2] * popt[4 * (i - 1) + 5]])
+                                  popt[4 * (i - 1) + 2] *
+                                  popt[4 * (i - 1) + 5]])
             if wobs_abs < popt[4 * (i - 1) + 3]:
                 label_plot = 'Inflow component '+str(n_inflows)
                 n_inflows += 1
