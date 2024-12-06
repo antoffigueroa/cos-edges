@@ -345,10 +345,14 @@ def plot_mgii_absorption(wav, spec, var, redshift, popt, pcov, n, system,
     plt.figure(figsize=(10, 3))
     plt.step(vel, spec, 'black', lw=0.5)
     plt.step(vel, var, 'lightgrey')
+    all_components = np.zeros(wav_finer.shape)
     for i in range(n):
-        component = np.array([popt[i*n], popt[i*n + 1], popt[i*n + 2],
-                              popt[i*n + 3]])
-        plt.plot(vel_finer, model(wav_finer, *component), label='Component '+str(n))
+        component = np.array([popt[4*i], popt[4*i + 1], popt[4*i + 2],
+                              popt[4*i + 3]])
+        plt.plot(vel_finer, model(wav_finer, *component),
+                 label='Component '+str(i + 1))
+        all_components = all_components + model(wav_finer, *component) - 1
+    plt.plot(vel_finer, all_components + 1, 'grey')
     plt.ylabel('Normalised flux', fontsize=20)
     plt.xlabel('Velocity [km/s]', fontsize=20)
     plt.text(-900, 0.2, system, fontsize=18)
