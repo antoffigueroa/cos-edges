@@ -348,7 +348,7 @@ def plot_mgii_absorption(wav, spec, var, redshift, popt, pcov, n, system,
     for i in range(n):
         component = np.array([popt[i*n], popt[i*n + 1], popt[i*n + 2],
                               popt[i*n + 3]])
-        plt.plot(vel_finer, model(wav_finer, *component), label='Component '+n)
+        plt.plot(vel_finer, model(wav_finer, *component), label='Component '+str(n))
     plt.ylabel('Normalised flux', fontsize=20)
     plt.xlabel('Velocity [km/s]', fontsize=20)
     plt.text(-900, 0.2, system, fontsize=18)
@@ -452,7 +452,7 @@ def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
     vel_em = useful.vel(wobs_em, wav)
     wav_finer_em = np.linspace(wav[0], wav[-1], num=10000)
     vel_finer_em = np.linspace(vel_em[0], vel_em[-1], num=10000)
-    ax1.step(vel_em, spec, 'black', lw=0.5, where='mid', label='data')
+    ax1.step(vel_em, spec, 'black', lw=0.5, where='mid')
     ax1.step(vel_em, var, 'lightgrey')
     if broad_component:
         if popt_em[0] > popt_em[3]:
@@ -472,9 +472,9 @@ def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
             label_outflow = 'Broad\noutflow\ncomponent'
         else:
             label_outflow = 'Broad\ninflow\ncomponent'
-        ax1.plot(vel_finer_em,
-                 analysis.gaussian_model(wav_finer_em, *outflow_component),
-                 color='lightblue', label=label_outflow, lw=2)
+        # ax1.plot(vel_finer_em,
+        #          analysis.gaussian_model(wav_finer_em, *outflow_component),
+        #          color='lightblue', label=label_outflow, lw=2)
         ax1.plot(vel_finer_em,
                  analysis.gaussian_model(wav_finer_em, *ism_component),
                  color='#6AB374', label='ISM\ncomponent', lw=2)
@@ -522,7 +522,7 @@ def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
     ax2.text(-900, 0.2, system, fontsize=18)
     ax2.set_xlim(-1000, 2000)
     ax2.set_ylim(-0.1, 1.2)
-    ax2.legend(fontsize=10)
+    ax2.legend(fontsize=15)
     ax2.tick_params(labelsize=15)
     if save:
         file = 'mgii_outflow/'

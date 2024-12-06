@@ -1529,7 +1529,7 @@ def fit_mgii(wav, spec, redshift, plot=False, var=None, system=None,
             low_bounds = np.append(low_bounds, np.array([0, wobs - 20, 0, 0]))
             up_bounds = np.append(up_bounds, np.array([1, wobs + 20, 2, 1]))
             p0 = np.append(p0, np.array([0.5, wobs, 0.5, 0.5]))
-        bounds = np.array([low_bounds, up_bounds])
+    bounds = np.array([low_bounds, up_bounds])
     popt, pcov = fit_absorption(wav_mgii, spec_norm, model, p0, bounds,
                                 var=var_mgii)
     if plot:
@@ -2234,7 +2234,7 @@ def hbeta_hgamma_fluxes(popt, n=1):
 
 
 def calculate_velocity(wav, spec, redshift, var=None,
-                       model="four_gaussian", wav_type='air', rest_wav=0):
+                       model="four_gaussian", wav_type='air', rest_wav=0, coord=None):
     """
     Calculates velocity of a spectrum given a redshift.
 
@@ -2283,6 +2283,11 @@ def calculate_velocity(wav, spec, redshift, var=None,
                                                                  var, 20,
                                                                  wav_obs)
         popt, pcov = em_fitting(wav_cut, spec_cut, gaussian_model, p0, bounds)
+        if type(popt) != int:
+            plt.figure()
+            plt.step(wav_cut, spec_cut)
+            plt.plot(wav_cut, gaussian_model(wav_cut, *popt))
+            plt.savefig(f'fits/{coord[0]}-{coord[1]}.png')
     if type(popt) != int:
         if rest_wav == 0:
             if wav_type == 'air':
@@ -2368,7 +2373,11 @@ def velocity_map(wav, data, var, redshift, mask_oii=None, mask_hbeta=None,
                     model = "four_gaussian"
                 else:
                     model = "two_gaussian"
-                velocity_map[y, x] = calculate_velocity(wav, spectrum,
+                if len(wav.shape) == 3:
+                    wav_i = wav[:, y, x]
+                else:
+                    wav_i = wav
+                velocity_map[y, x] = calculate_velocity(wav_i, spectrum,
                                                         redshift, var=variance,
                                                         model=model,
                                                         wav_type=wav_type)
@@ -2380,11 +2389,16 @@ def velocity_map(wav, data, var, redshift, mask_oii=None, mask_hbeta=None,
                 elif wav_type == 'vac':
                     rest_wav = dict_wav_vac[em_line]
                 model = "one_gaussian"
-                velocity_map[y, x] = calculate_velocity(wav, spectrum,
+                if len(wav.shape) == 3:
+                    wav_i = wav[:, y, x]
+                else:
+                    wav_i = wav
+                velocity_map[y, x] = calculate_velocity(wav_i, spectrum,
                                                         redshift, var=variance,
                                                         model=model,
                                                         wav_type=wav_type,
-                                                        rest_wav=rest_wav)
+                                                        rest_wav=rest_wav,
+                                                        coord=(x, y))
     if plot:
         display.plot_velocity_map(velocity_map, save=True,
                                   system_name=gal_names[cubeid])
