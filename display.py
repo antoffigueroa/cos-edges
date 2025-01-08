@@ -476,9 +476,9 @@ def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
             label_outflow = 'Broad\noutflow\ncomponent'
         else:
             label_outflow = 'Broad\ninflow\ncomponent'
-        # ax1.plot(vel_finer_em,
-        #          analysis.gaussian_model(wav_finer_em, *outflow_component),
-        #          color='lightblue', label=label_outflow, lw=2)
+        ax1.plot(vel_finer_em,
+                 analysis.gaussian_model(wav_finer_em, *outflow_component),
+                 color='lightblue', label=label_outflow, lw=2)
         ax1.plot(vel_finer_em,
                  analysis.gaussian_model(wav_finer_em, *ism_component),
                  color='#6AB374', label='ISM\ncomponent', lw=2)

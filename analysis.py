@@ -103,7 +103,7 @@ wratio5_abs_vac = wl_abs_vac[0]/wl_abs_vac[5]
 wratio6_abs_vac = wl_abs_vac[0]/wl_abs_vac[6]
 
 gal_names = {'00045': 'Face-on', '00046': 'Edge-on', '00047': 'Merging',
-             'G7-J1216mosaic': 'G7-J1216'}
+             'G7-J1216mosaic': 'G7-J1216', 'J220330': 'J220330'}
 # Create model
 
 
@@ -1520,7 +1520,7 @@ def fit_mgii(wav, spec, redshift, plot=False, var=None, system=None,
     wav_mgii, spec_mgii, var_mgii = useful.cut_spec(wav, spec, var, 50, wobs,
                                                     full=False, cont=False)
     spec_norm, var_mgii = useful.normalise_spectra(wav_mgii, spec_mgii,
-                                                   var_mgii, (50, 10, 20, 50),
+                                                   var_mgii, (50, 10, 20, 30),
                                                    wobs, deg=2)
     low_bounds = np.array([0, wobs - 20, 0, 0])
     up_bounds = np.array([1, wobs + 20, 2, 1])
@@ -1542,7 +1542,7 @@ def fit_mgii(wav, spec, redshift, plot=False, var=None, system=None,
 def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
                 em_line='Hbeta', n=2, system=None, save=False,
                 broad_component=False, flux_factor=10**(-16),
-                remove_ism=False):
+                remove_ism=False, all_components=False):
     """
     Fits an ISM componnet to the specified emission line. It then fits n
     Mg IIs, forcing one to have the same velocity and velocity dispersion as
@@ -1686,10 +1686,6 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
     try:
         popt, pcov = fit_absorption(wav_mgii, spec_norm, mgii_ism, p0, bounds,
                                     var=var_mgii)
-        plt.figure()
-        plt.plot(wav_mgii, spec_norm)
-        plt.plot(wav_mgii, mgii_ism(wav_mgii, *popt))
-        plt.show()
     except RuntimeError:
         print('Fit failed')
         return 0, 0
@@ -1711,8 +1707,20 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
         spec_no_ism = spec_norm + mgii_2796_ism + mgii_2803_ism
         plt.plot(wav_mgii, spec_no_ism)
         plt.show()
-        return popt, pcov, z_em, sigma_em, wav_mgii, spec_no_ism, var_mgii
-    return popt, pcov, z_em, sigma_em
+        if all_components:
+            mgii_2796_1 = gaussian_model(wav_mgii, popt[2], popt[3], popt[4])
+            mgii_2803_1 = gaussian_model(wav_mgii, popt[2] * popt[5],
+                                         popt[3] / mgii_ratio, popt[4])
+            spec_comp_1 = spec_no_ism + mgii_2796_1 + mgii_2803_1
+            mgii_2796_2 = gaussian_model(wav_mgii, popt[6], popt[7], popt[8])
+            mgii_2803_2 = gaussian_model(wav_mgii, popt[6] * popt[9],
+                                         popt[7] / mgii_ratio, popt[8])
+            spec_comp_2 = spec_no_ism + mgii_2796_2 + mgii_2803_2
+            return popt, pcov, z_em, sigma_em, wav_mgii, spec_comp_1, \
+                   var_mgii, spec_comp_2 
+        else:
+            return popt, pcov, z_em, sigma_em, wav_mgii, spec_no_ism, var_mgii
+    return popt, pcov, z_em, sigma_em, popt_em
 
 
 def fit_outflow_emission(wav, spec, var, redshift, wav_type='air',
