@@ -95,9 +95,9 @@ def get_goodpixels_and_noise(loglam_gal, var, z, mask_emission,
                             if (pix not in high_err_pix)])
     # Remove the parts where the sky subtraction was not very good
     if bad_sky is not None:
-        sky_trim = np.where((loglam_gal > bad_sky[0]) |
-                            ((loglam_gal > bad_sky[1]) &
-                             (loglam_gal < bad_sky[2])))[0]
+        sky_trim = np.where((loglam_gal >= bad_sky[0]) |
+                            ((loglam_gal >= bad_sky[1]) &
+                             (loglam_gal <= bad_sky[2])))[0]
         goodpix = np.array([pix for pix in goodpix0
                             if (pix not in sky_trim)])
         if len(bad_sky) > 3:
@@ -231,7 +231,7 @@ def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
     logflux_gal, loglam_gal, velscale = util.log_rebin(lam=[linlam_gal.min(),
                                                             linlam_gal.max()],
                                                        spec=linflux_gal)
-    logvar, aa, bb = util.log_rebin(lam=[linlam_gal.min(), linlam_gal.max()],
+    logvar, aa, bb = util.log_rebin(linlam_gal,
                                     spec=linvar_gal, velscale=velscale)
     noise = np.sqrt(logvar)
     loglam_gal = np.exp(loglam_gal)
@@ -349,6 +349,8 @@ def ppxf_spec(wav, spec, var, redshift, degree=12, mdegree=-1, fit_all=False,
         goodpix, noise = get_goodpixels_and_noise(loglam_gal, logvar, redshift,
                                                   False, LRIS_blue=LRIS_blue,
                                                   bad_sky=bad_sky)
+        print(logflux_gal.shape)
+        print(noise.shape)
         pp = ppxf(templates_combined, logflux_gal, noise, velscale,
                   start_components, goodpixels=goodpix, moments=moments,
                   degree=degree, mdegree=mdegree, lam=loglam_gal,

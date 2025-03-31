@@ -553,7 +553,7 @@ def normalise_spectra(wav_cut, spec_cut, var_cut, window, wobs, deg=2):
     z_cont = np.polyfit(cont_wav, cont_spec, deg, w=1 / cont_var)
     p_cont = np.poly1d(z_cont)
     spec_norm = spec_cut / p_cont(wav_cut)
-    var_norm = var_cut / p_cont(wav_cut)
+    var_norm = var_cut / (p_cont(wav_cut)**2)
     return spec_norm, var_norm
 
 

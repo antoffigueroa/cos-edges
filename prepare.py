@@ -662,6 +662,7 @@ def apply_barycentric_correction_and_save(input_fits_path, output_fits_path):
     fits.writeto(output_fits_path, data, header=hdr, overwrite=True)
     print(f'Barycentric corrected data saved to {output_fits_path}')
 
+
 def get_extinction_curve_optical(wav):
     """
     Calculates an extinction curve given an array of wavelengths.
