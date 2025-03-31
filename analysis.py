@@ -36,9 +36,11 @@ wratio4_air = wl_air[0]/wl_air[3]
 wratio5_air = wl_air[0]/wl_air[4]
 wratio6_air = wl_air[0]/wl_air[5]
 
-wl_h_air = np.array([dict_wav_air['Hgamma'], dict_wav_air['Hbeta']])
+wl_h_air = np.array([dict_wav_air['Hdelta'], dict_wav_air['Hgamma'],
+                     dict_wav_air['Hbeta']])
 
-wratioh_air = wl_h_air[0] / wl_h_air[1]
+wratioh_air = wl_h_air[1] / wl_h_air[2]
+wratiohdelta_air = wl_h_air[0] / wl_h_air[1]
 
 wl_bpt_air = np.array([dict_wav_air['OIII_r'], dict_wav_air['Hbeta'],
                        dict_wav_air['NII'], dict_wav_air['Halpha']])
@@ -75,9 +77,11 @@ wratio4_vac = wl_vac[0]/wl_vac[3]
 wratio5_vac = wl_vac[0]/wl_vac[4]
 wratio6_vac = wl_vac[0]/wl_vac[5]
 
-wl_h_vac = np.array([dict_wav_vac['Hgamma'], dict_wav_vac['Hbeta']])
+wl_h_vac = np.array([dict_wav_vac['Hdelta'], dict_wav_vac['Hgamma'],
+                     dict_wav_vac['Hbeta']])
 
-wratioh_vac = wl_h_vac[0] / wl_h_vac[1]
+wratioh_vac = wl_h_vac[1] / wl_h_vac[2]
+wratiohdelta_vac = wl_h_vac[0] / wl_h_vac[1]
 
 wl_bpt_vac = np.array([dict_wav_vac['OIII_r'], dict_wav_vac['Hbeta'],
                        dict_wav_vac['NII'], dict_wav_vac['Halpha']])
@@ -127,6 +131,124 @@ def gaussian_model(x, *params):
     """
     A, mu, sigma = params
     y = A * stats.norm.pdf(x, mu, sigma) * np.sqrt(2 * np.pi) * sigma
+    return y
+
+
+def hdelta_hgamma_model_air(x, *params):
+    """
+    Calculates a model with two gaussians separated by the wavelength ratio of
+    Hdelta and Hgamma in air.
+
+    Parameters
+    ----------
+    x : :obj:'~numpy.ndarray'
+        x-values for the gaussian.
+
+    *params : :obj:'~numpy.ndarray'
+        gaussian parameters. They must be in the following order: A1
+        (amplitude of the Hdelta line), mu (centroid of Hdelta), sigma
+        (standard deviation) and A2 (amplitude of the Hgamma line).
+
+    Returns
+    -------
+    y : :obj:'~numpy.ndarray'
+        y-values of the model.
+    """
+    A1, mu1, sigma, A2 = params
+    gaussian1 = gaussian_model(x, A1, mu1, sigma)
+    gaussian2 = gaussian_model(x, A2, mu1/wratiohdelta_air, sigma)
+    y = gaussian1 + gaussian2
+    return y
+
+
+def hdelta_hgamma_model_vac(x, *params):
+    """
+    Calculates a model with two gaussians separated by the wavelength ratio of
+    Hdelta and Hgamma in vacuumn.
+
+    Parameters
+    ----------
+    x : :obj:'~numpy.ndarray'
+        x-values for the gaussian.
+
+    *params : :obj:'~numpy.ndarray'
+        gaussian parameters. They must be in the following order: A1
+        (amplitude of the Hdelta line), mu (centroid of Hdelta), sigma
+        (standard deviation) and A2 (amplitude of the Hgamma line).
+
+    Returns
+    -------
+    y : :obj:'~numpy.ndarray'
+        y-values of the model.
+    """
+    A1, mu1, sigma, A2 = params
+    gaussian1 = gaussian_model(x, A1, mu1, sigma)
+    gaussian2 = gaussian_model(x, A2, mu1/wratiohdelta_vac, sigma)
+    y = gaussian1 + gaussian2
+    return y
+
+
+def n_hdelta_hgamma_model_vac(x, *params):
+    """
+    calculates a model with n pairs of Hdelta and Hgamma lines. The lines will
+    be separated by their wavelength ratio in the vacuumn.
+
+    Parameters
+    ----------
+    x : :obj:'~numpy.ndarray'
+        x-values for the gaussians
+
+    *params : :obj:'~numpy.ndarray'
+        gaussian parameters. They must be in the following order: A1
+        (amplitude of the Hdelta line), mu (centroid of Hdelta), sigma
+        (standard deviation) and A2 (amplitude of the Hgamma line).
+
+    Returns
+    -------
+    y : :obj:'~numpy.ndarray'
+        y-values of the model.
+    """
+    n = int(len(params) / 4)
+    y = 0
+    for i in range(n):
+        A1 = params[4*i]
+        mu = params[4*i + 1]
+        sigma = params[4*i + 2]
+        A2 = params[4*i + 3]
+        comp = [A1, mu, sigma, A2]
+        y = y + hdelta_hgamma_model_vac(x, *comp)
+    return y
+
+
+def n_hdelta_hgamma_model_air(x, *params):
+    """
+    calculates a model with n pairs of Hdelta and Hgamma lines. The lines will
+    be separated by their wavelength ratio in the air.
+
+    Parameters
+    ----------
+    x : :obj:'~numpy.ndarray'
+        x-values for the gaussians
+
+    *params : :obj:'~numpy.ndarray'
+        gaussian parameters. They must be in the following order: A1
+        (amplitude of the Hdelta line), mu (centroid of Hdelta), sigma
+        (standard deviation) and A2 (amplitude of the Hgamma line).
+
+    Returns
+    -------
+    y : :obj:'~numpy.ndarray'
+        y-values of the model.
+    """
+    n = int(len(params) / 4)
+    y = 0
+    for i in range(n):
+        A1 = params[4*i]
+        mu = params[4*i + 1]
+        sigma = params[4*i + 2]
+        A2 = params[4*i + 3]
+        comp = [A1, mu, sigma, A2]
+        y = y + hdelta_hgamma_model_air(x, *comp)
     return y
 
 
@@ -1414,6 +1536,72 @@ def hbeta_hgamma_fitting(wav, spec, redshift, plot=False, var=None,
     return popt, pcov
 
 
+def hgamma_hdelta_fitting(wav, spec, redshift, plot=False, var=None,
+                          coord=None, wav_type='air', n=1):
+    """
+    Applies em_fitting to a given spectrum, while using the Hgamma-Hdelta
+    model.
+
+    Parameters
+    ----------
+    wav : :obj:'~numpy.ndarray'
+        wavelength array of the data.
+
+    spec : :obj:'~numpy.ndarray'
+        flux array of the data.
+
+    redshift : float
+        redshift of the lines.
+
+    plot : boolean
+        if True, the fit will be plotted. Default is False.
+
+    var : :obj:'~numpy.ndarray'
+        variance array of the data. If not None, the variance will be
+        considered while doing the fit. Default is None.
+
+    coord : 2-tuple of int
+        spaxel coordinates. Only used if plot is True. If not None, the output
+        plot will include the spaxel coordinates in the name of the plot.
+        Default is None.
+
+    wav_type : str
+        type of wavelength. Supported types are "air" and "vac". Default is
+        "air".
+
+    n : int
+        number of Hgamma and Hdelta components to fit. Default is 1.
+
+    Returns
+    -------
+    popt : :obj:'~numpy.ndarray'
+        optimal parameters found by curve_fit. If the fit is unsuccesful, it
+        will return 0.
+
+    pcov : :obj:'~numpy.ndarray'
+        covariance matrix calculated by curve_fit. If the fit is unsuccesful,
+        it will return 0.
+    """
+    if wav_type == 'air':
+        model = n_hdelta_hgamma_model_air
+        wl_h = wl_h_air
+    elif wav_type == 'vac':
+        model = n_hdelta_hgamma_model_vac
+        wl_h = wl_h_vac
+    wav_cut, spec_cut, var_cut, p0, bounds = useful.cut_spec_n(wav, spec, var,
+                                                               15, wl_h *
+                                                               (1+redshift), 2,
+                                                               cont=True)
+    p0 = np.tile(p0, n)
+    bounds = np.tile(bounds, n)
+    popt, pcov = em_fitting(wav_cut, spec_cut, model, p0, bounds, var=var_cut,
+                            coord=coord)
+    if plot and type(popt) != int:
+        display.plot_fit(wav_cut, spec_cut, popt, "hgamma_hdelta", redshift,
+                         coord=coord, save=True, wav_type=wav_type)
+    return popt, pcov
+
+
 def fit_absorption(wav, spec, model, p0, bounds, var=None):
     """
     Fits absorption model to the given data.
@@ -1455,6 +1643,15 @@ def fit_absorption(wav, spec, model, p0, bounds, var=None):
         else:
             popt, pcov = curve_fit(model, wav, spec, p0=p0, bounds=bounds,
                                    sigma=np.sqrt(var))
+            residuals = spec - model(wav, *popt)
+            # Calculate chi-squared
+            chi2 = np.sum((residuals / np.sqrt(var)) ** 2)
+            # Degrees of freedom
+            dof = len(spec) - len(popt)
+            # Reduced chi-squared
+            reduced_chi2 = chi2 / dof
+            print(f"Chi-squared: {chi2:.2f}")
+            print(f"Reduced Chi-squared: {reduced_chi2:.2f}")
         return popt, pcov
     except RuntimeError:
         print('Fit failed')
@@ -1542,7 +1739,8 @@ def fit_mgii(wav, spec, redshift, plot=False, var=None, system=None,
 def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
                 em_line='Hbeta', n=2, system=None, save=False,
                 broad_component=False, flux_factor=10**(-16),
-                remove_ism=False, all_components=False):
+                remove_ism=False, all_components=False, two_ISM=False,
+                add_on=0):
     """
     Fits an ISM componnet to the specified emission line. It then fits n
     Mg IIs, forcing one to have the same velocity and velocity dispersion as
@@ -1632,10 +1830,19 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
         popt_em, pcov_em = fit_outflow_emission(wav, spec, var, redshift,
                                                 wav_type=wav_type,
                                                 em_line=em_line)
-        if popt_em[0] > popt_em[3]:
+        if two_ISM:
+            z_em_1 = popt_em[1] / wl_em - 1
+            sigma_em_1 = popt_em[2]
+            z_em_2 = popt_em[4] / wl_em - 1
+            sigma_em_2 = popt_em[5]
+        elif popt_em[0] > popt_em[3]:
+            vel_broad = useful.vel(popt_em[1], popt_em[4])
+            print(f"Broad component velocity: {vel_broad} km/s")
             z_em = popt_em[1] / wl_em - 1
             sigma_em = popt_em[2]
         else:
+            vel_broad = useful.vel(popt_em[4], popt_em[1])
+            print(f"Broad component velocity: {vel_broad} km/s")
             z_em = popt_em[4] / wl_em - 1
             sigma_em = popt_em[5]
     else:
@@ -1649,22 +1856,42 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
         A1 = params[0]
         alpha1 = params[1]
         y = 1
-        gaussian1 = gaussian_model(x, A1, wl_mgii * (1 + z_em), sigma_em)
-        gaussian2 = gaussian_model(x, A1 * alpha1,
-                                   wl_mgii * (1 + z_em)/mgii_ratio, sigma_em)
-        y = y - gaussian1 - gaussian2
+        if two_ISM:
+            A2 = params[0]
+            alpha2 = params[1]
+            gaussian1 = gaussian_model(x, A1, wl_mgii * (1 + z_em_1),
+                                       sigma_em_1)
+            gaussian2 = gaussian_model(x, A1 * alpha1,
+                                       wl_mgii * (1 + z_em_1)/mgii_ratio,
+                                       sigma_em_1)
+            gaussian3 = gaussian_model(x, A2, wl_mgii * (1 + z_em_2),
+                                       sigma_em_2)
+            gaussian4 = gaussian_model(x, A2 * alpha2,
+                                       wl_mgii * (1 + z_em_2)/mgii_ratio,
+                                       sigma_em_2)
+            y = y - gaussian1 - gaussian2 - gaussian3 - gaussian4
+        else:
+            gaussian1 = gaussian_model(x, A1, wl_mgii * (1 + z_em), sigma_em)
+            gaussian2 = gaussian_model(x, A1 * alpha1,
+                                       wl_mgii * (1 + z_em)/mgii_ratio,
+                                       sigma_em)
+            y = y - gaussian1 - gaussian2
         for i in range(n):
             if i == 0:
                 pass
             else:
-                A2 = params[4 * (i - 1) + 2]
-                mu2 = params[4 * (i - 1) + 3]
-                sigma2 = params[4 * (i - 1) + 4]
-                alpha2 = params[4 * (i - 1) + 5]
-                gaussian3 = gaussian_model(x, A2, mu2, sigma2)
-                gaussian4 = gaussian_model(x, alpha2 * A2, mu2/mgii_ratio,
+                if two_ISM:
+                    k = 4
+                else:
+                    k = 2
+                A2 = params[4 * (i - 1) + k]
+                mu2 = params[4 * (i - 1) + k + 1]
+                sigma2 = params[4 * (i - 1) + k + 2]
+                alpha2 = params[4 * (i - 1) + k + 3]
+                gaussian5 = gaussian_model(x, A2, mu2, sigma2)
+                gaussian6 = gaussian_model(x, alpha2 * A2, mu2/mgii_ratio,
                                            sigma2)
-                y = y - gaussian3 - gaussian4
+                y = y - gaussian5 - gaussian6
         return y
     wav_mgii, spec_mgii, var_mgii = useful.cut_spec(wav, spec, var, 50,
                                                     wobs_abs, full=False,
@@ -1672,16 +1899,21 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
     spec_norm, var_mgii = useful.normalise_spectra(wav_mgii, spec_mgii,
                                                    var_mgii, (50, 10, 20, 50),
                                                    wobs_abs, deg=2)
-    low_bounds = np.array([0.2, 0.01])
-    up_bounds = np.array([1, 1.1])
-    p0 = np.array([0.5, 0.5])
+    if two_ISM:
+        low_bounds = np.array([0.2, 0.01, 0.2, 0.01])
+        up_bounds = np.array([1, 1.1, 1, 1.1])
+        p0 = np.array([0.5, 0.5, 0.5, 0.5])
+    else:
+        low_bounds = np.array([0.2, 0.01])
+        up_bounds = np.array([1, 1.1])
+        p0 = np.array([0.5, 0.5])
     if n > 1:
         for i in range(n - 1):
             low_bounds = np.append(low_bounds,
                                    np.array([0.05, wobs_abs - 20, 0, 0.2]))
             up_bounds = np.append(up_bounds,
                                   np.array([1, wobs_abs + 20, 2.5, 1.1]))
-            p0 = np.append(p0, np.array([0.5, wobs_abs, 1., 0.5]))
+            p0 = np.append(p0, np.array([0.5, wobs_abs + add_on, 1.0, 0.5]))
     bounds = np.array([low_bounds, up_bounds])
     try:
         popt, pcov = fit_absorption(wav_mgii, spec_norm, mgii_ism, p0, bounds,
@@ -1690,12 +1922,17 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
         print('Fit failed')
         return 0, 0
     if plot:
+        plt.figure()
+        plt.plot(wav_mgii, spec_norm)
+        plt.plot(wav_mgii, mgii_ism(wav_mgii, *popt))
+        plt.show()
+        print(popt)
         display.plot_mgii_outflow(wav_cut_em, spec_cut_em, var_cut_em,
                                   wav_mgii, spec_norm, var_mgii, popt_em, popt,
                                   pcov, n, system, wav_type=wav_type,
                                   save=save, em_line=em_line,
                                   broad_component=broad_component,
-                                  flux_factor=flux_factor)
+                                  flux_factor=flux_factor, two_ISM=two_ISM)
     if remove_ism:
         plt.figure()
         plt.plot(wav_mgii, spec_norm)
@@ -1717,7 +1954,7 @@ def fit_outflow(wav, spec, redshift, var=None, wav_type='air', plot=False,
                                          popt[7] / mgii_ratio, popt[8])
             spec_comp_2 = spec_no_ism + mgii_2796_2 + mgii_2803_2
             return popt, pcov, z_em, sigma_em, wav_mgii, spec_comp_1, \
-                   var_mgii, spec_comp_2 
+                var_mgii, spec_comp_2
         else:
             return popt, pcov, z_em, sigma_em, wav_mgii, spec_no_ism, var_mgii
     return popt, pcov, z_em, sigma_em, popt_em
@@ -2245,6 +2482,40 @@ def hbeta_hgamma_fluxes(popt, n=1):
             hgamma_flux += popt[4*i]*popt[4*i + 2]*np.sqrt(2*np.pi)
             hbeta_flux += popt[4*i + 3]*popt[4*i + 2]*np.sqrt(2*np.pi)
     return hbeta_flux, hgamma_flux
+
+
+def hgamma_hdelta_fluxes(popt, n=1):
+    """
+    Calculates the Hgamma and Hdelta flux of a given spectrum.
+
+    Parameters
+    ----------
+    popt : :obj:'~numpy.ndarray'
+        optimal parameters of the Hgamma-Hdelta fit calculated by curve_fit.
+
+    n : int
+        number of Hgamma and Hdelta pairs to fit.
+
+    Returns
+    -------
+    hgamma_flux : float
+        calculated Hgamma flux. If the curve_fit fit is unsuccessful, it will
+        return 1.
+
+    hdelta_flux : float
+        calculated Hdelta flux. If the curve_fit fit is unsuccessful, it will
+        return 1.
+    """
+    if type(popt) == int:
+        hgamma_flux = 1
+        hdelta_flux = 1
+    else:
+        hgamma_flux = 0
+        hdelta_flux = 0
+        for i in range(n):
+            hdelta_flux += popt[4*i]*popt[4*i + 2]*np.sqrt(2*np.pi)
+            hgamma_flux += popt[4*i + 3]*popt[4*i + 2]*np.sqrt(2*np.pi)
+    return hgamma_flux, hdelta_flux
 
 
 def calculate_velocity(wav, spec, redshift, var=None,

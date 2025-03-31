@@ -374,7 +374,7 @@ def plot_mgii_absorption(wav, spec, var, redshift, popt, pcov, n, system,
 def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
                       popt, pcov, n, system, wav_type='air', save=False,
                       em_line='Hbeta', broad_component=False,
-                      flux_factor=10**(-16)):
+                      flux_factor=10**(-16), two_ISM=False):
     """
     Plots a panel an emission line, along with its fitted components, and a
     second panel with Mg II absorption and its fitted components.
@@ -459,29 +459,41 @@ def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
     ax1.step(vel_em, spec, 'black', lw=0.5, where='mid')
     ax1.step(vel_em, var, 'lightgrey')
     if broad_component:
+        ax1.plot(vel_finer_em,
+                     analysis.two_emissions_model(wav_finer_em, *popt_em),
+                     color='grey', label=em_line+'\nemission')
         if popt_em[0] > popt_em[3]:
-            outflow_component = np.array([popt_em[3], popt_em[4], popt_em[5]])
-            ism_component = np.array([popt_em[0], popt_em[1], popt_em[2]])
             wav_em = popt_em[1]
             sigma_em = popt_em[2]
         else:
-            ism_component = np.array([popt_em[3], popt_em[4], popt_em[5]])
-            outflow_component = np.array([popt_em[0], popt_em[1], popt_em[2]])
             wav_em = popt_em[4]
             sigma_em = popt_em[5]
-        ax1.plot(vel_finer_em,
-                 analysis.two_emissions_model(wav_finer_em, *popt_em),
-                 color='grey', label=em_line+'\nemission')
-        if ism_component[1] > outflow_component[1]:
-            label_outflow = 'Broad\noutflow\ncomponent'
+        if two_ISM:
+            first_component = np.array([popt_em[0], popt_em[1], popt_em[2]])
+            second_component = np.array([popt_em[3], popt_em[4], popt_em[5]])
+            ax1.plot(vel_finer_em,
+                     analysis.gaussian_model(wav_finer_em, *first_component),
+                     color='#6AB374', label='ISM\ncomponent 2', lw=2)
+            ax1.plot(vel_finer_em,
+                     analysis.gaussian_model(wav_finer_em, *second_component),
+                     color='lightblue', label='ISM\ncomponent 1', lw=2)
         else:
-            label_outflow = 'Broad\ninflow\ncomponent'
-        ax1.plot(vel_finer_em,
-                 analysis.gaussian_model(wav_finer_em, *outflow_component),
-                 color='lightblue', label=label_outflow, lw=2)
-        ax1.plot(vel_finer_em,
-                 analysis.gaussian_model(wav_finer_em, *ism_component),
-                 color='#6AB374', label='ISM\ncomponent', lw=2)
+            if popt_em[0] > popt_em[3]:
+                outflow_component = np.array([popt_em[3], popt_em[4], popt_em[5]])
+                ism_component = np.array([popt_em[0], popt_em[1], popt_em[2]])
+            else:
+                ism_component = np.array([popt_em[3], popt_em[4], popt_em[5]])
+                outflow_component = np.array([popt_em[0], popt_em[1], popt_em[2]])
+            if ism_component[1] > outflow_component[1]:
+                label_outflow = 'Broad\noutflow\ncomponent'
+            else:
+                label_outflow = 'Broad\ninflow\ncomponent'
+            ax1.plot(vel_finer_em,
+                     analysis.gaussian_model(wav_finer_em, *outflow_component),
+                     color='lightblue', label=label_outflow, lw=2)
+            ax1.plot(vel_finer_em,
+                     analysis.gaussian_model(wav_finer_em, *ism_component),
+                     color='#6AB374', label='ISM\ncomponent', lw=2)
     else:
         sigma_em = popt_em[2]
         ax1.plot(vel_finer_em, analysis.gaussian_model(wav_finer_em, *popt_em),
@@ -499,18 +511,33 @@ def plot_mgii_outflow(wav, spec, var, wav_mgii, spec_norm, var_mgii, popt_em,
     n_outflows = 1
     n_inflows = 1
     coolors = ['#6AB374', '#797CDC', '#B56B45', '#C52184', '#2B3A67']
+    if two_ISM:
+        n = n
     for i in range(n):
         if i == 0:
-            component = np.array([popt[0], wobs_abs, sigma_em,
+            z_em_1 = popt_em[1] / wl_em - 1
+            wobs_em_1 = wl_abs * (1 + z_em_1)
+            component = np.array([popt[0], wobs_em_1, popt_em[2],
                                   popt[0] * popt[1]])
-            label_plot = 'ISM component'
+            label_plot = 'ISM component 1'
             comp_color = coolors[0]
+        elif i == 1 and two_ISM:
+            z_em_2 = popt_em[4] / wl_em - 1
+            wobs_em_2 = wl_abs * (1 + z_em_2)
+            component = np.array([popt[2], wobs_em_2, popt_em[5],
+                                  popt[2] * popt[3]])
+            label_plot = 'ISM component 2'
+            comp_color = 'lightblue'
         else:
-            component = np.array([popt[4 * (i - 1) + 2], popt[4 * (i - 1) + 3],
-                                  popt[4 * (i - 1) + 4],
-                                  popt[4 * (i - 1) + 2] *
-                                  popt[4 * (i - 1) + 5]])
-            if wobs_abs < popt[4 * (i - 1) + 3]:
+            if two_ISM:
+                k = 0 
+            else:
+                k = 2
+            component = np.array([popt[4 * (i - 1) + k], popt[4 * (i - 1) + k + 1],
+                                  popt[4 * (i - 1) + k + 2],
+                                  popt[4 * (i - 1) + k] *
+                                  popt[4 * (i - 1) + k + 3]])
+            if wobs_abs < popt[4 * (i - 1) + k + 1]:
                 label_plot = 'Inflow component '+str(n_inflows)
                 n_inflows += 1
                 comp_color = coolors[2]
