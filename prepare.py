@@ -661,3 +661,29 @@ def apply_barycentric_correction_and_save(input_fits_path, output_fits_path):
     # Save the updated data and header into a new FITS file
     fits.writeto(output_fits_path, data, header=hdr, overwrite=True)
     print(f'Barycentric corrected data saved to {output_fits_path}')
+
+def get_extinction_curve_optical(wav):
+    """
+    Calculates an extinction curve given an array of wavelengths.
+
+    Parameters
+    ----------
+    wav : :obj:'~numpy.ndarray'
+        wavelength array.
+
+    Returns
+    -------
+    k_lam : :obj:'~numpy.ndarray'
+        extinction curve
+    """
+    wav = 10000.0/wav
+    # define the equations from the paper
+    y = wav - 1.82
+    a_x = 1.0 + 0.17699*y - 0.50447*(y**2.0) - 0.02427*(y**3.0) \
+        + 0.72085*(y**4.0) + 0.01979*(y**5.0) - 0.77530*(y**6.0) \
+        + 0.32999*(y**7.0)
+    b_x = 1.41338*y + 2.28305*(y**2.0) + 1.07233*(y**3.0) - 5.38434*(y**4.0) \
+        - 0.62251*(y**5.0) + 5.30260*(y**6.0) - 2.09002*(y**7.0)
+    Rv = 3.1  # this is the usual adopted value
+    k_lam = a_x * Rv + b_x
+    return k_lam
